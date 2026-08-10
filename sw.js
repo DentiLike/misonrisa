@@ -1,5 +1,5 @@
-// Mi Sonrisa by Dentilike — v10
-const CACHE_NAME = "misonrisa-v10";
+// Mi Sonrisa by Dentilike — v16
+const CACHE_NAME = "misonrisa-v16";
 const ASSETS = [
   "./",
   "./index.html",
@@ -12,7 +12,8 @@ const ASSETS = [
   "./logo-dentilike.png",
   "./logo-dentilike-compact.png",
   "./icon-maskable.png",
-  "./og-image.png"
+  "./og-image.png",
+  "./og-image.jpg"
 ];
 
 self.addEventListener("install", (e) => {
