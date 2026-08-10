@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#1f5b9e"/>
+<title>Mi Sonrisa by Dentilike · Cuidados con Brackets</title>
+<meta name="description" content="Guía interactiva de cuidados con brackets. Solucionador de urgencias, checklist diario y consejos de Mikes Molares. Dentilike."/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="icon" type="image/png" href="favicon.png"/>
+<link rel="apple-touch-icon" href="favicon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --azul:#1f5b9e; --azul-osc:#14406e; --azul-claro:#eff6ff;
+  --teal:#5DC1BF; --teal-osc:#2fa8a4;
+  --tinta:#0f172a; --gris:#64748b; --gris-cl:#94a3b8;
+  --borde:#e2e8f0; --ok:#059669; --ambar:#f59e0b; --rojo:#dc2626;
+  --oro:#d4a72c; --fondo:#f6f8fb; --sombra:0 8px 24px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif; background:var(--fondo); color:var(--tinta); line-height:1.5; -webkit-font-smoothing:antialiased; padding-bottom:82px; min-height:100vh}
+h1,h2,h3,.marca{font-family:'Fredoka',sans-serif}
+.wrap{max-width:480px; margin:0 auto; padding:0 16px}
+button{font-family:inherit; cursor:pointer}
+img{max-width:100%; display:block}
+
+/* Topbar */
+.topbar{background:var(--azul); color:#fff; padding:12px 16px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:20; box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.topbar .back{background:rgba(255,255,255,.15); border:none; color:#fff; width:34px; height:34px; border-radius:10px; font-size:18px; display:none; align-items:center; justify-content:center; flex-shrink:0}
+.topbar .back.show{display:flex}
+.topbar .marca{font-weight:600; font-size:1.05rem}
+.topbar .sub{font-size:.72rem; opacity:.85; margin-top:1px}
+.topbar .logo-icon{width:32px; height:32px; flex-shrink:0; object-fit:contain}
+.topbar .titulo-wrap{flex:1; display:flex; align-items:center; gap:9px}
+.topbar .logo-dentilike-top{height:23px; width:auto; flex-shrink:0; object-fit:contain; background:#fff; border-radius:6px; padding:4px 8px}
+
+/* Screens */
+.screen{display:none; animation:fadeIn .25s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)}}
+
+/* Home */
+.avatar-box{text-align:center; padding:22px 0 6px}
+.avatar-box img{width:132px; height:132px; margin:0 auto; border-radius:50%; border:4px solid var(--teal); object-fit:cover; background:#fff}
+.avatar-box img.fallback{display:none}
+.bocadillo{background:#fff; border:1.5px solid var(--borde); border-radius:16px; padding:12px 16px; margin:14px auto 6px; max-width:340px; font-size:.9rem; color:var(--gris); box-shadow:var(--sombra); position:relative; text-align:center}
+.home-title{text-align:center; font-size:1.3rem; font-weight:700; color:var(--azul-osc); margin:8px 0 4px}
+.link-bienvenida{display:block; text-align:center; font-size:.82rem; color:var(--azul); font-weight:600; margin:2px 0 4px; text-decoration:none}
+
+.install-banner{background:linear-gradient(135deg,var(--azul),var(--teal-osc)); color:#fff; border-radius:16px; padding:14px 16px; margin:14px 0; display:flex; align-items:center; gap:12px; box-shadow:var(--sombra); position:relative}
+.install-banner .ico{font-size:1.8rem; flex-shrink:0}
+.install-banner b{display:block; font-size:.9rem}
+.install-banner span{font-size:.76rem; opacity:.9}
+.install-banner button.ver{background:rgba(255,255,255,.2); border:1.5px solid rgba(255,255,255,.5); color:#fff; font-weight:700; font-size:.76rem; padding:7px 12px; border-radius:10px; flex-shrink:0}
+.install-banner .cerrar{position:absolute; top:6px; right:8px; background:none; border:none; color:#fff; opacity:.7; font-size:.9rem; padding:4px}
+.link-instalar{display:block; text-align:center; font-size:.78rem; color:var(--gris); margin:4px 0 2px; text-decoration:underline}
+
+.pasos-instalar{list-style:none; display:flex; flex-direction:column; gap:10px; margin:14px 0}
+.pasos-instalar li{display:flex; gap:10px; font-size:.87rem; align-items:flex-start}
+.pasos-instalar li .num{background:var(--azul-claro); color:var(--azul); font-weight:700; font-size:.78rem; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px}
+.btn-instalar-ahora{display:block; width:100%; background:var(--ok); color:#fff; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:.92rem; margin-bottom:10px}
+
+/* Modal bienvenida */
+.modal-overlay{display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:50; align-items:flex-end; justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-card{background:#fff; border-radius:22px 22px 0 0; padding:26px 22px 24px; max-width:480px; width:100%; box-shadow:0 -8px 30px rgba(0,0,0,.2); animation:slideUp .3s ease; max-height:85vh; overflow-y:auto}
+@keyframes slideUp{from{transform:translateY(30px); opacity:0} to{transform:translateY(0); opacity:1}}
+.modal-card img{width:96px; height:96px; margin:0 auto 12px; border-radius:50%; border:3px solid var(--teal)}
+.modal-card h2{text-align:center; color:var(--azul-osc); font-size:1.15rem; margin-bottom:10px}
+.modal-card p{font-size:.9rem; color:var(--gris); line-height:1.6; margin-bottom:10px}
+.modal-card .btn-cerrar{display:block; width:100%; background:var(--azul); color:#fff; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:.92rem; margin-top:10px}
+.home-sub{text-align:center; color:var(--gris); font-size:.88rem; margin-bottom:18px}
+
+.menu-cards{display:flex; flex-direction:column; gap:12px; margin-top:8px}
+.menu-card{background:#fff; border-radius:16px; padding:16px; box-shadow:var(--sombra); border:1.5px solid var(--borde); display:flex; align-items:center; gap:14px; text-align:left; border-left:5px solid var(--azul)}
+.menu-card.urg{border-left-color:var(--rojo)}
+.menu-card.chk{border-left-color:var(--teal-osc)}
+.menu-card .ico{font-size:1.9rem; flex-shrink:0}
+.menu-card .txt b{display:block; font-size:1rem; color:var(--tinta)}
+.menu-card .txt span{font-size:.8rem; color:var(--gris)}
+
+.streak-pill{display:inline-flex; align-items:center; gap:6px; background:var(--azul-claro); color:var(--azul-osc); font-weight:700; font-size:.8rem; padding:6px 12px; border-radius:999px; margin:10px auto 0}
+.streak-row{text-align:center}
+
+/* Section headers */
+.sec-head{padding:18px 0 10px}
+.sec-head h1{font-size:1.25rem; color:var(--azul-osc)}
+.sec-head p{color:var(--gris); font-size:.85rem; margin-top:3px}
+
+/* Alerta severa */
+.alerta-roja{background:#fef2f2; border:1.5px solid #fecaca; color:#991b1b; font-size:.82rem; border-radius:12px; padding:12px 14px; margin:10px 0 16px; line-height:1.5}
+.alerta-roja b{color:var(--rojo)}
+
+/* Urgencia list */
+.urg-list{display:flex; flex-direction:column; gap:10px}
+.urg-item{background:#fff; border:1.5px solid var(--borde); border-radius:14px; padding:14px; display:flex; align-items:center; gap:12px; box-shadow:var(--sombra)}
+.urg-item .ico{font-size:1.6rem}
+.urg-item b{font-size:.92rem}
+.urg-item .flecha{margin-left:auto; color:var(--gris-cl)}
+.urg-item.urgente{border-color:#fecaca}
+.tag-urgente{display:inline-block; background:#fef2f2; color:var(--rojo); font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:999px; margin-top:3px}
+
+/* Detalle urgencia */
+.det-card{background:#fff; border-radius:16px; padding:18px; box-shadow:var(--sombra); border:1.5px solid var(--borde)}
+.det-card h2{color:var(--azul-osc); font-size:1.1rem; margin-bottom:12px; display:flex; align-items:center; gap:8px}
+.pasos{list-style:none; display:flex; flex-direction:column; gap:10px; margin-bottom:16px}
+.pasos li{display:flex; gap:10px; font-size:.88rem; align-items:flex-start}
+.pasos li .num{background:var(--azul-claro); color:var(--azul); font-weight:700; font-size:.78rem; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px}
+.def-box{background:var(--azul-claro); border-radius:12px; padding:12px 14px; font-size:.85rem; color:var(--azul-osc); margin-bottom:14px}
+.def-box b{display:block; margin-bottom:2px; font-size:.78rem; text-transform:uppercase; letter-spacing:.02em; color:var(--azul)}
+.nota-costo{background:#fffbeb; border:1.5px solid #fde68a; border-radius:12px; padding:10px 14px; font-size:.78rem; color:#92400e; margin-bottom:14px; line-height:1.45}
+.nota-alerta{background:#fef2f2; border:1.5px solid #fecaca; border-radius:12px; padding:10px 14px; font-size:.78rem; color:#991b1b; margin-bottom:14px; line-height:1.45}
+.btn-wa{display:flex; align-items:center; justify-content:center; gap:8px; background:var(--ok); color:#fff; font-weight:700; border:none; border-radius:12px; padding:13px; font-size:.92rem; width:100%; text-decoration:none}
+
+/* Guia tabs */
+.tabs{display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; -webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0; background:#fff; border:1.5px solid var(--borde); color:var(--gris); font-weight:600; font-size:.82rem; padding:9px 14px; border-radius:999px}
+.tab-btn.active{background:var(--azul); border-color:var(--azul); color:#fff}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.guia-card{background:#fff; border-radius:14px; padding:14px 16px; margin-bottom:10px; box-shadow:var(--sombra); border:1.5px solid var(--borde)}
+.guia-card h3{font-size:.92rem; color:var(--azul-osc); margin-bottom:6px; display:flex; gap:8px; align-items:center}
+.guia-card ul{padding-left:18px; font-size:.85rem; color:var(--gris); display:flex; flex-direction:column; gap:4px}
+.guia-card p{font-size:.85rem; color:var(--gris)}
+.chip-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
+.chip{font-size:.76rem; padding:4px 10px; border-radius:999px; font-weight:600}
+.chip.evitar{background:#fef2f2; color:var(--rojo)}
+.chip.ok{background:#ecfdf5; color:var(--ok)}
+.chip.precaucion{background:#fffbeb; color:#b45309}
+
+/* Checklist */
+.chk-settings{background:#fff; border:1.5px solid var(--borde); border-radius:14px; padding:12px 14px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; box-shadow:var(--sombra)}
+.chk-settings span{font-size:.86rem; font-weight:600}
+.chk-avatar-wrap{text-align:center; margin-bottom:8px}
+.chk-avatar-wrap img{width:84px; height:84px; border-radius:50%; border:3px solid var(--teal); margin:0 auto 6px; object-fit:cover}
+.chk-avatar-msg{font-size:.85rem; color:var(--gris); max-width:320px; margin:0 auto}
+.det-avatar{display:flex; align-items:center; gap:10px; margin-bottom:14px}
+.det-avatar img{width:52px; height:52px; border-radius:50%; border:2.5px solid var(--teal); object-fit:cover; flex-shrink:0}
+.det-avatar span{font-size:.85rem; color:var(--gris); font-style:italic}
+.switch{position:relative; width:44px; height:24px; flex-shrink:0}
+.switch input{opacity:0; width:0; height:0}
+.switch .sl{position:absolute; inset:0; background:var(--gris-cl); border-radius:999px; transition:.2s}
+.switch .sl:before{content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s}
+.switch input:checked + .sl{background:var(--teal-osc)}
+.switch input:checked + .sl:before{transform:translateX(20px)}
+
+.chk-list{display:flex; flex-direction:column; gap:9px; margin-bottom:16px}
+.chk-item{background:#fff; border:1.5px solid var(--borde); border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:12px; box-shadow:var(--sombra)}
+.chk-item.done{background:#ecfdf5; border-color:#a7e3ca}
+.chk-box{width:24px; height:24px; border-radius:7px; border:2px solid var(--gris-cl); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:.9rem; color:#fff}
+.chk-item.done .chk-box{background:var(--ok); border-color:var(--ok)}
+.chk-item span{font-size:.88rem}
+.chk-item.done span{text-decoration:line-through; color:var(--gris)}
+
+.progreso-wrap{background:#fff; border-radius:14px; padding:14px 16px; margin-bottom:16px; box-shadow:var(--sombra); border:1.5px solid var(--borde)}
+.progreso-bar{height:10px; background:var(--fondo); border-radius:999px; overflow:hidden; margin-top:8px}
+.progreso-fill{height:100%; background:linear-gradient(90deg,var(--teal),var(--azul)); border-radius:999px; transition:width .3s}
+.progreso-txt{font-size:.8rem; color:var(--gris); display:flex; justify-content:space-between}
+
+/* Bottom nav */
+.bottomnav{position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--borde); display:flex; z-index:30; padding-bottom:env(safe-area-inset-bottom)}
+.nav-btn{flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; gap:2px; padding:9px 0 8px; color:var(--gris-cl); font-size:.66rem; font-weight:600}
+.nav-btn .ic{font-size:1.25rem}
+.nav-btn.active{color:var(--azul)}
+
+.foot-disc{font-size:.68rem; color:var(--gris-cl); text-align:center; margin:18px 0 8px; line-height:1.4}
+.foot-contacto{background:#fff; border-top:1px solid var(--borde); border-radius:16px 16px 0 0; margin:20px -16px 0; padding:22px 20px 20px; text-align:center}
+.foot-contacto img.logo-dl{max-width:190px; margin:0 auto 12px}
+.foot-contacto .linea{font-size:.8rem; color:var(--gris); margin-bottom:6px; line-height:1.5}
+.foot-contacto a{color:var(--azul); font-weight:600; text-decoration:none}
+.foot-contacto .legal{font-size:.68rem; color:var(--gris-cl); margin-top:12px; line-height:1.5}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back" id="btnBack" onclick="scVolver()">←</button>
+  <div class="titulo-wrap">
+    <img class="logo-icon" src="logo-misonrisa-icon.png" alt="Mi Sonrisa" onerror="this.style.display='none'">
+    <div>
+      <div class="marca" id="tbTitulo">Mi Sonrisa</div>
+      <div class="sub" id="tbSub">by Dentilike</div>
+    </div>
+  </div>
+  <img class="logo-dentilike-top" src="logo-dentilike-compact.png" alt="Dentilike" onerror="this.style.display='none'">
+</div>
+
+<div class="wrap">
+
+  <!-- HOME -->
+  <div class="screen active" id="screenHome">
+    <div class="avatar-box">
+      <img id="homeAvatarImg" src="avatar-dr.png" alt="Mikes Molares" style="cursor:pointer" onclick="scTipAleatorio()" onerror="this.style.display='none'; document.getElementById('avEmoji').style.display='flex'">
+      <div id="avEmoji" class="fallback" style="display:none; width:132px;height:132px;margin:0 auto;border-radius:50%;border:4px solid var(--teal);background:#fff;align-items:center;justify-content:center;font-size:3.2rem; cursor:pointer" onclick="scTipAleatorio()">🦷</div>
+    </div>
+    <div class="bocadillo" id="bocadillo">¡Hola! Soy Mikes Molares 🦷 Aquí te ayudo a cuidar tus brackets, resolver urgencias y no perder tu racha diaria. Tócame para un tip del día 👆</div>
+    <a href="#" class="link-bienvenida" onclick="scMostrarBienvenida(); return false;">🎉 ¿Te acaban de colocar los brackets? Toca aquí</a>
+    <div class="home-title">¿Qué necesitas hoy?</div>
+    <div class="streak-row"><span class="streak-pill" id="streakPill">🔥 0 días de racha</span></div>
+
+    <div class="install-banner" id="installBanner" style="display:none">
+      <button class="cerrar" onclick="scOcultarBanner()">✕</button>
+      <div class="ico">📲</div>
+      <div style="flex:1"><b>Instala esta app en tu celular</b><span>Ábrela más rápido y úsala aunque no tengas internet</span></div>
+      <button class="ver" onclick="scMostrarInstalar()">Ver cómo</button>
+    </div>
+    <a href="#" class="link-instalar" id="linkComoInstalar" onclick="scMostrarInstalar(); return false;">📲 ¿Cómo instalar esta app en mi celular?</a>
+
+    <div class="menu-cards" style="margin-top:16px">
+      <button class="menu-card urg" onclick="scIr('urgencia')">
+        <div class="ico">🚨</div>
+        <div class="txt"><b>Tengo una urgencia</b><span>Bracket despegado, alambre pica, dolor, etc.</span></div>
+      </button>
+      <button class="menu-card" onclick="scIr('guia')">
+        <div class="ico">📖</div>
+        <div class="txt"><b>Guía de cuidados</b><span>Higiene, alimentación, dolor y citas</span></div>
+      </button>
+      <button class="menu-card chk" onclick="scIr('checklist')">
+        <div class="ico">✅</div>
+        <div class="txt"><b>Mi checklist de hoy</b><span id="homeChkResumen">Marca tus tareas del día</span></div>
+      </button>
+      <a class="menu-card" style="border-left-color:var(--oro); text-decoration:none" href="#" onclick="scAgendarCita(); return false;">
+        <div class="ico">📅</div>
+        <div class="txt"><b>Quiero agendar mi cita de control</b><span>Te contactamos por WhatsApp</span></div>
+      </a>
+    </div>
+
+    <div class="foot-contacto">
+      <img class="logo-dl" src="logo-dentilike.png" alt="Dentilike · Dr. Miguel Alvarado · Ortodoncia" onerror="this.style.display='none'">
+      <div class="linea">📍 <a href="https://www.google.com/maps/search/?api=1&query=Himno+Nacional+1902-C%2C+Fraccionamiento+Tangamanga%2C+San+Luis+Potos%C3%AD" target="_blank" rel="noopener">Himno Nacional 1902-C, Fracc. Tangamanga, San Luis Potosí</a><br>
+      <span style="font-size:.74rem">Junto a Médica Florencia, frente a la gasolinera Mobil de Clouthier</span></div>
+      <div class="linea">📞 <a href="https://wa.me/524446036659" target="_blank" rel="noopener">444 603 6659</a></div>
+      <div class="linea" id="footWeb">🌐 <a href="https://dentilike.com.mx" target="_blank" rel="noopener">dentilike.com.mx</a></div>
+      <div class="legal">
+        Dr. Miguel Alvarado Avilés · Cédula de especialidad en ortodoncia: 11491679<br>
+        Aviso de funcionamiento / permiso de salubridad (COFEPRIS): 2624015036X00501<br>
+        Esta guía es orientativa y no sustituye la valoración de tu ortodoncista.
+      </div>
+    </div>
+  </div>
+
+  <!-- URGENCIA: LISTA -->
+  <div class="screen" id="screenUrgencia">
+    <div class="sec-head"><h1>¿Qué te está pasando?</h1><p>Elige tu situación para ver qué hacer ahora mismo.</p></div>
+    <div class="alerta-roja"><b>Atención:</b> si notas hinchazón facial, fiebre o sangrado que no se detiene, contacta de inmediato al Dr. Miguel Alvarado. Si no logras comunicarte y los síntomas empeoran, acude a un servicio de urgencias.</div>
+    <div class="urg-list" id="urgList"></div>
+  </div>
+
+  <!-- URGENCIA: DETALLE -->
+  <div class="screen" id="screenUrgenciaDetalle">
+    <div class="det-card" id="detCard"></div>
+  </div>
+
+  <!-- GUIA -->
+  <div class="screen" id="screenGuia">
+    <div class="sec-head"><h1>Guía de cuidados</h1><p>Lo esencial para que tu tratamiento avance sin contratiempos.</p></div>
+    <div class="tabs" id="guiaTabs"></div>
+    <div id="guiaPanels"></div>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="screen" id="screenChecklist">
+    <div class="sec-head"><h1>Mi checklist de hoy</h1><p id="fechaHoyTxt"></p></div>
+    <div class="chk-avatar-wrap">
+      <img id="chkAvatarImg" src="avatar-dr.png" alt="Mikes Molares" onerror="this.style.display='none'">
+      <div class="chk-avatar-msg" id="chkAvatarMsg">¡Vamos, tú puedes con todo hoy!</div>
+    </div>
+
+    <div class="chk-settings">
+      <span>Uso elásticos (ligas)</span>
+      <label class="switch"><input type="checkbox" id="toggleElasticos" onchange="scToggleElasticos()"><span class="sl"></span></label>
+    </div>
+
+    <div class="progreso-wrap">
+      <div class="progreso-txt"><span>Progreso de hoy</span><span id="progresoNum">0/0</span></div>
+      <div class="progreso-bar"><div class="progreso-fill" id="progresoFill" style="width:0%"></div></div>
+    </div>
+
+    <div class="chk-list" id="chkList"></div>
+
+    <div class="streak-row" style="margin-bottom:18px"><span class="streak-pill" id="streakPill2">🔥 0 días de racha</span></div>
+  </div>
+
+</div>
+
+<div class="bottomnav">
+  <button class="nav-btn active" data-nav="home" onclick="scIr('home')"><span class="ic">🏠</span>Inicio</button>
+  <button class="nav-btn" data-nav="guia" onclick="scIr('guia')"><span class="ic">📖</span>Guía</button>
+  <button class="nav-btn" data-nav="urgencia" onclick="scIr('urgencia')"><span class="ic">🚨</span>Urgencia</button>
+  <button class="nav-btn" data-nav="checklist" onclick="scIr('checklist')"><span class="ic">✅</span>Checklist</button>
+</div>
+
+<div class="modal-overlay" id="modalBienvenida">
+  <div class="modal-card">
+    <img src="avatar-dr.png" alt="Mikes Molares" onerror="this.style.display='none'">
+    <h2>¡Bienvenido/a a este viaje! 🎉</h2>
+    <p>Soy <b>Mikes Molares</b>, el asistente virtual del Dr. Miguel Alvarado.</p>
+    <p>Te felicito por tomar esta decisión — vamos rumbo a una nueva sonrisa, y juntos veremos los cambios poco a poco.</p>
+    <p>Aquí me vas a encontrar para lo que necesites: cómo cuidar tus brackets, qué hacer si tienes una urgencia, y llevar tu checklist del día a día. Estoy para apoyarte en todo el camino.</p>
+    <button class="btn-cerrar" onclick="scCerrarBienvenida()">Vamos a comenzar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalInstalar">
+  <div class="modal-card">
+    <img src="avatar-ok.png" alt="Mikes Molares" onerror="this.style.display='none'">
+    <h2>📲 Instala Mi Sonrisa</h2>
+    <p>Así la abres directo desde tu pantalla de inicio, como cualquier otra app — y funciona incluso sin internet.</p>
+    <div id="instalarContenido"></div>
+    <button class="btn-cerrar" onclick="scCerrarInstalar()">Entendido</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Mi Sonrisa by Dentilike — cuidados con brackets
+   Single-file PWA. Sin backend. localStorage únicamente.
+   ============================================================ */
+const CONFIG = {
+  telClinica: "524446036659",
+  nombreClinica: "Dr. Miguel Alvarado · Dentilike"
+};
+
+/* ---------- Instalación como app (PWA) ---------- */
+let scDeferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  scDeferredPrompt = e;
+});
+function scEsStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function scMostrarInstalar(){
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  const esIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const esAndroid = /Android/.test(ua);
+  const cont = document.getElementById('instalarContenido');
+  if (esIOS){
+    cont.innerHTML = `<ul class="pasos-instalar">
+      <li><div class="num">1</div><div>Abre esta página en <b>Safari</b> (no funciona desde Chrome en iPhone).</div></li>
+      <li><div class="num">2</div><div>Toca el ícono de compartir <b>⬆️</b> en la barra inferior.</div></li>
+      <li><div class="num">3</div><div>Desliza hacia abajo y toca <b>"Agregar a inicio"</b>.</div></li>
+      <li><div class="num">4</div><div>Toca <b>"Agregar"</b> arriba a la derecha. Listo, ya tienes el ícono en tu pantalla.</div></li>
+    </ul>`;
+  } else if (scDeferredPrompt){
+    cont.innerHTML = `<button class="btn-instalar-ahora" onclick="scInstalarAhora()">Instalar ahora</button>
+      <p style="text-align:center; font-size:.78rem">Tu navegador puede instalarla con un solo toque.</p>`;
+  } else if (esAndroid){
+    cont.innerHTML = `<ul class="pasos-instalar">
+      <li><div class="num">1</div><div>Toca el menú <b>⋮</b> arriba a la derecha de Chrome.</div></li>
+      <li><div class="num">2</div><div>Toca <b>"Instalar app"</b> o <b>"Agregar a pantalla de inicio"</b>.</div></li>
+      <li><div class="num">3</div><div>Confirma tocando <b>"Instalar"</b>.</div></li>
+    </ul>`;
+  } else {
+    cont.innerHTML = `<ul class="pasos-instalar">
+      <li><div class="num">1</div><div>Busca el ícono de instalar en la barra de direcciones de tu navegador, o el menú de opciones.</div></li>
+      <li><div class="num">2</div><div>Selecciona <b>"Instalar"</b> o <b>"Agregar a pantalla de inicio"</b>.</div></li>
+    </ul>`;
+  }
+  document.getElementById('modalInstalar').classList.add('show');
+}
+function scCerrarInstalar(){
+  document.getElementById('modalInstalar').classList.remove('show');
+}
+function scInstalarAhora(){
+  if (!scDeferredPrompt) return;
+  scDeferredPrompt.prompt();
+  scDeferredPrompt.userChoice.then(() => { scDeferredPrompt = null; scCerrarInstalar(); });
+}
+function scOcultarBanner(){
+  document.getElementById('installBanner').style.display = 'none';
+  localStorage.setItem('sc_install_dismissed','1');
+}
+function scActualizarBannerInstalar(){
+  if (scEsStandalone()){
+    document.getElementById('installBanner').style.display = 'none';
+    document.getElementById('linkComoInstalar').style.display = 'none';
+    return;
+  }
+  if (localStorage.getItem('sc_install_dismissed') !== '1'){
+    document.getElementById('installBanner').style.display = 'flex';
+  }
+}
+
+function scHoyISO(){
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,10);
+}
+
+/* ---------- Datos: URGENCIAS ---------- */
+const URGENCIAS = [
+  { id:"alambre", ico:"📌", titulo:"El alambre me pica o salió", urgente:false,
+    pasos:[
+      "Toma un pedazo pequeño de cera de ortodoncia, caliéntala entre tus dedos y aplánala bien sobre la punta del alambre que molesta. Repite si se cae.",
+      "Si puedes, empuja con cuidado el alambre hacia su lugar usando un cotonete limpio o la goma de un lápiz.",
+      "Comunícate con el Dr. Miguel Alvarado para que te indique si necesitas una cita para cortarlo o ajustarlo.",
+      "Al escribirle, si tienes a la mano el diámetro y calibre del alambre (o el animalito de la bolsita, si te quedó algún sobrante), coméntaselo — le ayuda a tenerte listo lo necesario."
+    ],
+    solucion:"Contáctanos para agendar el ajuste. No esperes hasta tu cita regular.",
+    notaCosto:true },
+  { id:"bracket", ico:"🦷", titulo:"Se me despegó un bracket", urgente:false,
+    pasos:[
+      "Si se cayó por completo, guárdalo en un pañuelo o bolsita y llévalo a tu cita.",
+      "Si quedó pegado pero gira sobre el alambre, cúbrelo con cera si te está molestando.",
+      "No es una urgencia dolorosa, pero sí debe recolocarse pronto.",
+      "Al escribirle al Dr. Miguel, si conservaste la bolsita, coméntale qué animalito trae impreso — le ayuda a saber cuál bracket es antes de tu cita."
+    ],
+    solucion:"Avísale al Dr. Miguel Alvarado para agendar tu cita de recolocación. No esperes a tu próxima cita regular.",
+    notaCosto:true },
+  { id:"banda", ico:"⭕", titulo:"Se aflojó una banda (anillo metálico)", urgente:true,
+    pasos:[
+      "No intentes quitarla ni acomodarla tú mismo.",
+      "Evita masticar del lado donde sientes la banda floja."
+    ],
+    solucion:"Llama al Dr. Miguel Alvarado de inmediato para agendar tu revisión." },
+  { id:"dolor", ico:"😖", titulo:"Me duele después de un ajuste", urgente:false,
+    pasos:[
+      "Es normal los primeros días: los dientes se sienten sensibles o \"flojos\".",
+      "Come alimentos blandos: sopas, puré, yogur, pasta, huevo.",
+      "Puedes tomar un analgésico de venta libre: paracetamol 500 mg, 1 tableta cada 8 horas por 3 días, o ibuprofeno 400 mg, 1 cápsula cada 8 horas."
+    ],
+    alertaRoja:"No tomes paracetamol ni ibuprofeno si sabes que eres alérgico a alguno de ellos. Si tienes dudas o tomas otros medicamentos, consulta antes con tu médico o con nosotros.",
+    solucion:"Si el dolor es muy fuerte o no cede después de varios días, contáctanos." },
+  { id:"llaga", ico:"🩹", titulo:"Tengo una llaga o rozadura", urgente:false,
+    pasos:[
+      "Toma una bolita pequeña de cera de ortodoncia.",
+      "Caliéntala entre tus dedos hasta que esté maleable.",
+      "Aplánala sobre el bracket o alambre que está rozando tu mejilla o labio.",
+      "Si es una afta (llaguita blanca dolorosa, no causada directamente por el roce), puedes usar un gel de venta libre como GUM Canker o Kank-a para aliviar la molestia."
+    ],
+    solucion:"Si la llaga persiste varios días, es muy grande o se ve muy irritada, avísanos." },
+  { id:"modulo", ico:"🔘", titulo:"Se cayó el módulo o liga de color de un bracket", urgente:false,
+    pasos:[
+      "Es la liguita de color que sostiene el alambre dentro del bracket — no es lo mismo que los elásticos intermaxilares que usas para la mordida.",
+      "No es doloroso ni urgente, pero conviene revisarlo pronto para que el alambre no pierda su función."
+    ],
+    solucion:"Avísale al Dr. Miguel Alvarado para saber si conviene adelantar tu cita o esperar a la siguiente." },
+  { id:"elastico", ico:"➰", titulo:"Se me rompió o acabaron mis elásticos intermaxilares (ligas de mordida)", urgente:false,
+    pasos:[
+      "Estos son las ligas que colocas tú mismo entre arriba y abajo para corregir la mordida (no el módulo de color del bracket).",
+      "Coloca uno nuevo del paquete que te dimos, en la posición exacta que te indicó tu ortodoncista.",
+      "Si ya no te quedan de repuesto, avísanos para reponerlos."
+    ],
+    solucion:"No dejes de usarlos: sin elásticos intermaxilares el tratamiento no avanza como debe." },
+  { id:"flojo", ico:"😬", titulo:"Siento un diente flojo o raro", urgente:false,
+    pasos:[
+      "Tranquilo: es una sensación normal y esperada, parte del proceso de mover los dientes.",
+      "Poco a poco esa sensación va mejorando conforme el diente se acomoda en su nueva posición.",
+      "Evita moverlo con la lengua o los dedos, eso puede hacer que lo notes más."
+    ],
+    solucion:"Si te preocupa, la sensación es muy intensa o no mejora con los días, escríbenos y lo revisamos sin problema." }
+];
+
+/* ---------- Datos: GUÍA POR TABS ---------- */
+const GUIA = {
+  higiene: { label:"Higiene", ico:"🪥", cards:[
+    { h:"Cepillado", items:[
+      "Cepíllate después de cada comida, sin excepción.",
+      "Usa un cepillo especial para ortodoncia (cerdas en forma de V, hechas para rodear el bracket) — limpia mucho mejor que un cepillo normal.",
+      "Ángulo de 45° hacia la encía por encima del bracket, y hacia arriba por debajo.",
+      "Cepilla suavemente el bracket y el alambre, y no olvides las caras internas."
+    ]},
+    { h:"Hilo dental", items:[
+      "Al menos una vez al día — es de los pasos más importantes.",
+      "Con brackets es muy difícil usar hilo normal: te recomendamos el Superfloss de Oral-B, que ya trae una punta rígida para pasar por debajo del alambre.",
+      "No olvides los cepillos interdentales (cepillo pequeño tipo \"escobillón\") — son clave para limpiar entre bracket y bracket, todos los días."
+    ]},
+    { h:"Enjuague e irrigador", items:[
+      "Enjuague con flúor después del cepillado nocturno, para prevenir manchas blancas.",
+      "El irrigador (Waterpik) no sustituye al hilo, pero ayuda a sacar restos grandes de comida antes de cepillarte."
+    ]}
+  ]},
+  alimentacion: { label:"Alimentación", ico:"🍽️", cards:[
+    { h:"Evita esto", chips:["Hielo","Caramelos duros","Frutos secos","Palomitas","Chicles","Gomitas","Manzana entera","Elote entero"], tipo:"evitar" },
+    { h:"Con precaución", items:[
+      "Regla de oro: si es duro, ¡córtalo en trozos pequeños!",
+      "Desgrana el elote antes de comerlo.",
+      "Quita el hueso a duraznos o ciruelas antes de morder.",
+      "Corta la carne fibrosa en pedazos pequeños."
+    ], tipo:"precaucion"},
+    { h:"Ideales, sobre todo tras un ajuste", chips:["Yogur","Sopas","Puré","Pasta","Arroz","Huevo","Pescado","Verduras cocidas","Frutas blandas"], tipo:"ok" }
+  ]},
+  dolor: { label:"Dolor", ico:"😖", cards:[
+    { h:"Molestia normal", items:[
+      "Sensibilidad o sensación de dientes \"flojos\" los primeros días es normal.",
+      "Alimentos blandos durante esos días.",
+      "Analgésico habitual para dolor de cabeza si es necesario (consulta antes si tienes dudas)."
+    ]},
+    { h:"Llagas y rozaduras", items:[
+      "Usa la cera de ortodoncia sobre el punto que roza.",
+      "Bolita pequeña, caliéntala con los dedos, aplánala sobre el bracket o alambre."
+    ]}
+  ]},
+  citas: { label:"Citas", ico:"📅", cards:[
+    { h:"No faltes a tus citas", items:[
+      "Faltar a los ajustes solo alarga tu tratamiento total."
+    ]},
+    { h:"Elásticos intermaxilares (ligas de mordida)", items:[
+      "Úsalos exactamente como te indicó tu ortodoncista, tiempo completo o solo de noche.",
+      "Son clave para corregir la mordida — sin ellos el tratamiento no avanza bien.",
+      "No los confundas con el módulo de color del bracket: si se te caen o acaban, es un tema distinto al que también le damos seguimiento."
+    ]},
+    { h:"No olvides tu dentista general", items:[
+      "Sigue con tus limpiezas cada 6 meses, incluso durante la ortodoncia."
+    ]}
+  ]}
+};
+
+/* ---------- Checklist ---------- */
+function scChecklistItems(){
+  const base = [
+    { id:"des", label:"Cepillado después del desayuno" },
+    { id:"com", label:"Cepillado después de la comida" },
+    { id:"cen", label:"Cepillado después de la cena" },
+    { id:"hilo", label:"Hilo dental (una vez al día)" },
+    { id:"enj", label:"Enjuague con flúor antes de dormir" }
+  ];
+  if (scGetElasticos()) base.splice(4,0,{ id:"elas", label:"Usé mis elásticos como indicado" });
+  return base;
+}
+function scGetElasticos(){ return localStorage.getItem('sc_elasticos') === '1'; }
+function scToggleElasticos(){
+  const v = document.getElementById('toggleElasticos').checked;
+  localStorage.setItem('sc_elasticos', v ? '1':'0');
+  scRenderChecklist();
+}
+function scGetEstadoHoy(){
+  const hoy = scHoyISO();
+  let raw = localStorage.getItem('sc_chk_estado');
+  let data = raw ? JSON.parse(raw) : {fecha:hoy, marcados:{}};
+  if (data.fecha !== hoy){
+    scCerrarDiaAnterior(data);
+    data = {fecha:hoy, marcados:{}};
+  }
+  return data;
+}
+function scGuardarEstado(data){ localStorage.setItem('sc_chk_estado', JSON.stringify(data)); }
+function scCerrarDiaAnterior(dataAnterior){
+  const items = scChecklistItems();
+  const totalPrev = Object.keys(dataAnterior.marcados||{}).length ? Object.values(dataAnterior.marcados).filter(Boolean).length : 0;
+  const totalPosible = items.length;
+  let racha = parseInt(localStorage.getItem('sc_racha')||"0",10);
+  if (totalPrev > 0 && totalPosible > 0 && totalPrev >= totalPosible){
+    racha += 1;
+  } else if (dataAnterior.fecha) {
+    racha = 0;
+  }
+  localStorage.setItem('sc_racha', String(racha));
+}
+function scToggleItem(id){
+  const data = scGetEstadoHoy();
+  data.marcados[id] = !data.marcados[id];
+  scGuardarEstado(data);
+  scRenderChecklist();
+}
+function scRenderChecklist(){
+  document.getElementById('toggleElasticos').checked = scGetElasticos();
+  document.getElementById('fechaHoyTxt').textContent = new Date().toLocaleDateString('es-MX',{weekday:'long', day:'numeric', month:'long'});
+  const items = scChecklistItems();
+  const data = scGetEstadoHoy();
+  const list = document.getElementById('chkList');
+  list.innerHTML = items.map(it => {
+    const on = !!data.marcados[it.id];
+    return `<button class="chk-item ${on?'done':''}" onclick="scToggleItem('${it.id}')">
+      <div class="chk-box">${on?'✓':''}</div><span>${it.label}</span>
+    </button>`;
+  }).join('');
+  const done = items.filter(it => data.marcados[it.id]).length;
+  const total = items.length;
+  document.getElementById('progresoNum').textContent = `${done}/${total}`;
+  document.getElementById('progresoFill').style.width = total ? `${Math.round(done/total*100)}%` : '0%';
+
+  const chkImg = document.getElementById('chkAvatarImg');
+  const chkMsg = document.getElementById('chkAvatarMsg');
+  if (total > 0 && done === total){
+    chkImg.src = 'avatar-dr.png';
+    chkMsg.textContent = '¡Completaste todo hoy! Así se cuida un tratamiento 🎉';
+  } else if (done === 0){
+    chkImg.src = 'avatar-dr.png';
+    chkMsg.textContent = '¡Vamos, tú puedes con todo hoy!';
+  } else {
+    chkImg.src = 'avatar-ok.png';
+    chkMsg.textContent = `Vas ${done}/${total} — sigue así.`;
+  }
+
+  const racha = parseInt(localStorage.getItem('sc_racha')||"0",10);
+  document.getElementById('streakPill').textContent = `🔥 ${racha} día${racha===1?'':'s'} de racha`;
+  document.getElementById('streakPill2').textContent = `🔥 ${racha} día${racha===1?'':'s'} de racha`;
+  document.getElementById('homeChkResumen').textContent = total ? `Hoy: ${done}/${total} completado` : 'Marca tus tareas del día';
+}
+
+/* ---------- Navegación ---------- */
+let scStack = ['home'];
+const scTitulos = {
+  home:{t:"Mi Sonrisa", s:"By Dentilike · Cuidados con brackets"},
+  urgencia:{t:"Urgencias", s:"¿Qué te está pasando?"},
+  urgenciaDetalle:{t:"Urgencias", s:"Qué hacer ahora"},
+  guia:{t:"Guía de cuidados", s:"Higiene, dieta, dolor y citas"},
+  checklist:{t:"Mi checklist", s:"Tu rutina de hoy"}
+};
+function scMostrar(nombre){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const map = {home:'screenHome', urgencia:'screenUrgencia', urgenciaDetalle:'screenUrgenciaDetalle', guia:'screenGuia', checklist:'screenChecklist'};
+  document.getElementById(map[nombre]).classList.add('active');
+  const info = scTitulos[nombre] || scTitulos.home;
+  document.getElementById('tbTitulo').textContent = info.t;
+  document.getElementById('tbSub').textContent = info.s;
+  document.getElementById('btnBack').classList.toggle('show', nombre !== 'home');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === nombre || (nombre==='urgenciaDetalle' && b.dataset.nav==='urgencia')));
+  window.scrollTo(0,0);
+}
+function scIr(nombre){
+  if (nombre === 'home') scStack = ['home'];
+  else scStack.push(nombre);
+  scMostrar(nombre);
+  if (nombre === 'urgencia') scRenderUrgList();
+  if (nombre === 'guia') scRenderGuia();
+  if (nombre === 'checklist') scRenderChecklist();
+}
+function scVolver(){
+  if (scStack.length > 1) scStack.pop();
+  scMostrar(scStack[scStack.length-1]);
+}
+
+/* ---------- Render Urgencias ---------- */
+function scRenderUrgList(){
+  document.getElementById('urgList').innerHTML = URGENCIAS.map(u => `
+    <button class="urg-item ${u.urgente?'urgente':''}" onclick="scAbrirUrgencia('${u.id}')">
+      <div class="ico">${u.ico}</div>
+      <div><b>${u.titulo}</b>${u.urgente?'<div class="tag-urgente">Llama de inmediato</div>':''}</div>
+      <div class="flecha">›</div>
+    </button>
+  `).join('');
+}
+const TIPS_DIA = [
+  "El cepillo interdental es tu mejor amigo entre brackets — úsalo todos los días, no solo cuando sientes algo atorado.",
+  "Trae siempre contigo un poco de cera de ortodoncia, nunca sabes cuándo la vas a necesitar.",
+  "Si vas a comer algo duro, la regla de oro es: córtalo en trozos pequeños primero.",
+  "Cambia tu cepillo de dientes cada 3 meses, o antes si ves las cerdas abiertas.",
+  "El hilo dental antes de dormir hace más diferencia de lo que crees — es cuando menos saliva tienes para autolimpiarte.",
+  "Usa tus elásticos intermaxilares exactamente como te indicaron, aunque no duela — ahí está la corrección de tu mordida.",
+  "No faltes a tus citas de ajuste — cada una acorta el tiempo total de tu tratamiento, no lo alarga.",
+  "Si sientes un diente flojo, es buena señal: significa que se está moviendo hacia donde debe."
+];
+function scTipAleatorio(){
+  const tip = TIPS_DIA[Math.floor(Math.random()*TIPS_DIA.length)];
+  document.getElementById('bocadillo').textContent = '💡 ' + tip;
+}
+function scMostrarBienvenida(){
+  document.getElementById('modalBienvenida').classList.add('show');
+}
+function scCerrarBienvenida(){
+  document.getElementById('modalBienvenida').classList.remove('show');
+}
+function scAgendarCita(){
+  // TODO futuro: conectar a calendario automático. Por ahora, solo WhatsApp directo.
+  const texto = encodeURIComponent("Hola Dr. Miguel, quiero agendar mi cita de control.");
+  window.open(`https://wa.me/${CONFIG.telClinica}?text=${texto}`, '_blank');
+}
+function scAbrirUrgencia(id){
+  const u = URGENCIAS.find(x => x.id === id);
+  if (!u) return;
+  const waTexto = encodeURIComponent(`Hola Dr. Miguel, soy su paciente y tengo una urgencia con mis brackets: ${u.titulo}`);
+  const notaCosto = u.notaCosto ? `<div class="nota-costo">⚠️ Si se confirma que hay que reponer o recolocar un bracket, puede generar un costo adicional — salvo que esté dentro de las 48 horas posteriores a su colocación, cubierto por garantía.</div>` : '';
+  const notaAlerta = u.alertaRoja ? `<div class="nota-alerta">🚫 ${u.alertaRoja}</div>` : '';
+  const moodMap = {
+    banda:    { img:'avatar-asustado.png', txt:'Ya sé que asusta un poco — vamos a resolverlo. Sigue estos pasos y avísame de inmediato.' },
+    alambre:  { img:'avatar-asustado.png', txt:'Sé que un alambre que pica es muy incómodo. Vamos a calmarlo con estos pasos.' },
+    llaga:    { img:'avatar-asustado.png', txt:'Uf, una llaga duele y molesta al hablar o comer. Esto te va a ayudar a sentirte mejor.' },
+    dolor:    { img:'avatar-asustado.png', txt:'Sé que estás pasando un mal rato. Es parte del proceso y va a mejorar — aquí va lo que puedes hacer.' }
+  };
+  const mood = moodMap[u.id] || { img:'avatar-ok.png', txt:'Esto es común y tiene solución. Vamos paso a paso.' };
+  const moodImg = mood.img;
+  const moodTxt = mood.txt;
+  document.getElementById('detCard').innerHTML = `
+    <div class="det-avatar"><img src="${moodImg}" alt="Mikes Molares" onerror="this.style.display='none'"><span>${moodTxt}</span></div>
+    <h2>${u.ico} ${u.titulo}</h2>
+    <ul class="pasos">${u.pasos.map((p,i)=>`<li><div class="num">${i+1}</div><div>${p}</div></li>`).join('')}</ul>
+    <div class="def-box"><b>Solución definitiva</b>${u.solucion}</div>
+    ${notaAlerta}
+    ${notaCosto}
+    <a class="btn-wa" href="https://wa.me/${CONFIG.telClinica}?text=${waTexto}" target="_blank" rel="noopener">💬 Avisar al Dr. Miguel Alvarado por WhatsApp</a>
+  `;
+  scStack.push('urgenciaDetalle');
+  scMostrar('urgenciaDetalle');
+}
+
+/* ---------- Render Guía ---------- */
+let scTabActual = 'higiene';
+function scRenderGuia(){
+  const tabsEl = document.getElementById('guiaTabs');
+  tabsEl.innerHTML = Object.keys(GUIA).map(k => `<button class="tab-btn ${k===scTabActual?'active':''}" onclick="scCambiarTab('${k}')">${GUIA[k].ico} ${GUIA[k].label}</button>`).join('');
+  const panelsEl = document.getElementById('guiaPanels');
+  panelsEl.innerHTML = Object.keys(GUIA).map(k => {
+    const cards = GUIA[k].cards.map(c => {
+      if (c.chips){
+        return `<div class="guia-card"><h3>${c.h}</h3><div class="chip-row">${c.chips.map(ch=>`<span class="chip ${c.tipo}">${ch}</span>`).join('')}</div></div>`;
+      }
+      return `<div class="guia-card"><h3>${c.h}</h3><ul>${c.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
+    }).join('');
+    return `<div class="tab-panel ${k===scTabActual?'active':''}" id="panel-${k}">${cards}</div>`;
+  }).join('');
+}
+function scCambiarTab(k){
+  scTabActual = k;
+  scRenderGuia();
+}
+
+/* ---------- Init ---------- */
+window.addEventListener('DOMContentLoaded', () => {
+  scGetEstadoHoy(); // dispara cierre de día anterior si aplica
+  scRenderChecklist();
+  scActualizarBannerInstalar();
+  if ('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+});
+</script>
+</body>
+</html>
