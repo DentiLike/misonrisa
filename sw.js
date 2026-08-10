@@ -1,5 +1,5 @@
-// Mi Sonrisa by Dentilike — v16
-const CACHE_NAME = "misonrisa-v16";
+// Mi Sonrisa by Dentilike — v18
+const CACHE_NAME = "misonrisa-v18";
 const ASSETS = [
   "./",
   "./index.html",
@@ -12,7 +12,6 @@ const ASSETS = [
   "./logo-dentilike.png",
   "./logo-dentilike-compact.png",
   "./icon-maskable.png",
-  "./og-image.png",
   "./og-image.jpg"
 ];
 
