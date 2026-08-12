@@ -11,8 +11,8 @@
 <meta property="og:type" content="website"/>
 <meta property="og:title" content="Mi Sonrisa by Dentilike · Cuidados con Brackets"/>
 <meta property="og:description" content="Guía interactiva de cuidados con brackets. Solucionador de urgencias, checklist diario y consejos de Mikes Molares. Dentilike."/>
-<meta property="og:image" content="https://misonrisa.dentilike.com.mx/og-image.jpg"/>
-<meta property="og:image:type" content="image/jpeg"/>
+<meta property="og:image" content="https://misonrisa.dentilike.com.mx/og-image.png"/>
+<meta property="og:image:type" content="image/png"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta property="og:url" content="https://misonrisa.dentilike.com.mx/"/>
@@ -20,7 +20,7 @@
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Mi Sonrisa by Dentilike · Cuidados con Brackets"/>
 <meta name="twitter:description" content="Guía interactiva de cuidados con brackets. Dentilike."/>
-<meta name="twitter:image" content="https://misonrisa.dentilike.com.mx/og-image.jpg"/>
+<meta name="twitter:image" content="https://misonrisa.dentilike.com.mx/og-image.png"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="icon" type="image/png" href="favicon.png"/>
 <link rel="apple-touch-icon" href="favicon.png"/>
@@ -60,7 +60,9 @@ img{max-width:100%; display:block}
 
 /* Home */
 .avatar-box{text-align:center; padding:22px 0 6px}
-.avatar-box img{width:132px; height:132px; margin:0 auto; border-radius:50%; border:4px solid var(--teal); object-fit:cover; background:#fff}
+.avatar-box .avatar-anim{position:relative; width:164px; height:164px; margin:0 auto; border-radius:50%; border:4px solid var(--teal); overflow:hidden; background:#fff; cursor:pointer}
+.avatar-box .avatar-anim img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:opacity .6s ease}
+.avatar-box .avatar-anim img.behind{opacity:0}
 .avatar-box img.fallback{display:none}
 .bocadillo{background:#fff; border:1.5px solid var(--borde); border-radius:16px; padding:12px 16px; margin:14px auto 6px; max-width:340px; font-size:.9rem; color:var(--gris); box-shadow:var(--sombra); position:relative; text-align:center}
 .home-title{text-align:center; font-size:1.3rem; font-weight:700; color:var(--azul-osc); margin:8px 0 4px}
@@ -94,7 +96,7 @@ img{max-width:100%; display:block}
 .menu-card{background:#fff; border-radius:16px; padding:16px; box-shadow:var(--sombra); border:1.5px solid var(--borde); display:flex; align-items:center; gap:14px; text-align:left; border-left:5px solid var(--azul)}
 .menu-card.urg{border-left-color:var(--rojo)}
 .menu-card.chk{border-left-color:var(--teal-osc)}
-.menu-card .ico{font-size:1.9rem; flex-shrink:0}
+.menu-card .ico{font-size:2.4rem; flex-shrink:0}
 .menu-card .txt b{display:block; font-size:1rem; color:var(--tinta)}
 .menu-card .txt span{font-size:.8rem; color:var(--gris)}
 
@@ -113,7 +115,7 @@ img{max-width:100%; display:block}
 /* Urgencia list */
 .urg-list{display:flex; flex-direction:column; gap:10px}
 .urg-item{background:#fff; border:1.5px solid var(--borde); border-radius:14px; padding:14px; display:flex; align-items:center; gap:12px; box-shadow:var(--sombra)}
-.urg-item .ico{font-size:1.6rem}
+.urg-item .ico{font-size:2rem}
 .urg-item b{font-size:.92rem}
 .urg-item .flecha{margin-left:auto; color:var(--gris-cl)}
 .urg-item.urgente{border-color:#fecaca}
@@ -210,8 +212,11 @@ img{max-width:100%; display:block}
   <!-- HOME -->
   <div class="screen active" id="screenHome">
     <div class="avatar-box">
-      <img id="homeAvatarImg" src="avatar-dr.png" alt="Mikes Molares" style="cursor:pointer" onclick="scTipAleatorio()" onerror="this.style.display='none'; document.getElementById('avEmoji').style.display='flex'">
-      <div id="avEmoji" class="fallback" style="display:none; width:132px;height:132px;margin:0 auto;border-radius:50%;border:4px solid var(--teal);background:#fff;align-items:center;justify-content:center;font-size:3.2rem; cursor:pointer" onclick="scTipAleatorio()">🦷</div>
+      <div class="avatar-anim" onclick="scTipAleatorio()">
+        <img id="homeAvatarFront" src="avatar-asustado.png" alt="Mikes Molares">
+        <img id="homeAvatarBack" class="behind" src="avatar-ok.png" alt="Mikes Molares">
+      </div>
+      <div id="avEmoji" class="fallback" style="display:none; width:164px;height:164px;margin:0 auto;border-radius:50%;border:4px solid var(--teal);background:#fff;align-items:center;justify-content:center;font-size:3.2rem; cursor:pointer" onclick="scTipAleatorio()">🦷</div>
     </div>
     <div class="bocadillo" id="bocadillo">¡Hola! Soy Mikes Molares 🦷 Aquí te ayudo a cuidar tus brackets, resolver urgencias y no perder tu racha diaria. Tócame para un tip del día 👆</div>
     <a href="#" class="link-bienvenida" onclick="scMostrarBienvenida(); return false;">🎉 ¿Te acaban de colocar los brackets? Toca aquí</a>
@@ -728,11 +733,30 @@ function scCambiarTab(k){
   scRenderGuia();
 }
 
+/* ---------- Animación avatar home: asustado → ok ---------- */
+let scAvatarShowingFront = true;
+function scAvatarAnimar(){
+  const front = document.getElementById('homeAvatarFront');
+  const back = document.getElementById('homeAvatarBack');
+  if (!front || !back) return;
+  setInterval(() => {
+    if (scAvatarShowingFront){
+      front.classList.add('behind');
+      back.classList.remove('behind');
+    } else {
+      front.classList.remove('behind');
+      back.classList.add('behind');
+    }
+    scAvatarShowingFront = !scAvatarShowingFront;
+  }, 3000); // cada 3 segundos alterna
+}
+
 /* ---------- Init ---------- */
 window.addEventListener('DOMContentLoaded', () => {
   scGetEstadoHoy(); // dispara cierre de día anterior si aplica
   scRenderChecklist();
   scActualizarBannerInstalar();
+  scAvatarAnimar();
   if ('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   }
