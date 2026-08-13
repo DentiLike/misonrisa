@@ -249,7 +249,7 @@ img{max-width:100%; display:block}
   <!-- HOME -->
   <div class="screen active" id="screenHome">
     <div class="avatar-box">
-      <img src="avatar-ok.png" class="avatar-menu" alt="Dr. Miguel Alvarado" onclick="scTipAleatorio()">
+      <img src="avatar-dr.png" class="avatar-menu" alt="Dr. Miguel Alvarado" onclick="scTipAleatorio()">
     </div>
     <div class="bocadillo" id="bocadillo">¡Hola! Soy Mikes Molares 🦷 Aquí te ayudo a cuidar tus brackets, resolver urgencias y no perder tu racha diaria. Tócame para un tip del día 👆</div>
     <a href="#" class="link-bienvenida" onclick="scMostrarBienvenida(); return false;">🎉 ¿Te acaban de colocar los brackets? Toca aquí</a>
@@ -320,7 +320,7 @@ img{max-width:100%; display:block}
   <div class="screen" id="screenChecklist">
     <div class="sec-head"><h1>Mi checklist de hoy</h1><p id="fechaHoyTxt"></p></div>
     <div class="chk-avatar-wrap">
-      <img id="chkAvatarImg" src="avatar-ok.png" alt="Mikes Molares" onerror="this.style.display='none'">
+      <img id="chkAvatarImg" src="avatar-dr.png" alt="Mikes Molares" onerror="this.style.display='none'">
       <div class="chk-avatar-msg" id="chkAvatarMsg">¡Vamos, tú puedes con todo hoy!</div>
     </div>
 
@@ -350,7 +350,7 @@ img{max-width:100%; display:block}
 
 <div class="modal-overlay" id="modalBienvenida">
   <div class="modal-card">
-    <img src="avatar-ok.png" alt="Mikes Molares" onerror="this.style.display='none'">
+    <img src="avatar-dr.png" alt="Mikes Molares" onerror="this.style.display='none'">
     <h2>¡Bienvenido/a a este viaje! 🎉</h2>
     <p>Soy <b>Mikes Molares</b>, el asistente virtual del Dr. Miguel Alvarado.</p>
     <p>Te felicito por tomar esta decisión — vamos rumbo a una nueva sonrisa, y juntos veremos los cambios poco a poco.</p>
@@ -361,7 +361,7 @@ img{max-width:100%; display:block}
 
 <div class="modal-overlay" id="modalInstalar">
   <div class="modal-card">
-    <img src="avatar-ok.png" alt="Mikes Molares" onerror="this.style.display='none'">
+    <img src="avatar-dr.png" alt="Mikes Molares" onerror="this.style.display='none'">
     <h2>📲 Instala Mi Sonrisa</h2>
     <p>Así la abres directo desde tu pantalla de inicio, como cualquier otra app — y funciona incluso sin internet.</p>
     <div id="instalarContenido"></div>
@@ -633,13 +633,13 @@ function scRenderChecklist(){
   const chkImg = document.getElementById('chkAvatarImg');
   const chkMsg = document.getElementById('chkAvatarMsg');
   if (total > 0 && done === total){
-    chkImg.src = 'avatar-ok.png';
+    chkImg.src = 'avatar-dr.png';
     chkMsg.textContent = '¡Completaste todo hoy! Así se cuida un tratamiento 🎉';
   } else if (done === 0){
-    chkImg.src = 'avatar-ok.png';
+    chkImg.src = 'avatar-dr.png';
     chkMsg.textContent = '¡Vamos, tú puedes con todo hoy!';
   } else {
-    chkImg.src = 'avatar-ok.png';
+    chkImg.src = 'avatar-dr.png';
     chkMsg.textContent = `Vas ${done}/${total} — sigue así.`;
   }
 
@@ -723,6 +723,7 @@ function scAbrirUrgencia(id){
   const notaCosto = u.notaCosto ? `<div class="nota-costo">⚠️ Si se confirma que hay que reponer o recolocar un bracket, puede generar un costo adicional — salvo que esté dentro de las 48 horas posteriores a su colocación, cubierto por garantía.</div>` : '';
   const notaAlerta = u.alertaRoja ? `<div class="nota-alerta">🚫 ${u.alertaRoja}</div>` : '';
   
+  // Mapa de urgencias que generan animacion de asustado a dr (ok)
   const moodMap = {
     banda:    { animado: true, txt:'Ya sé que asusta un poco — vamos a resolverlo. Sigue estos pasos y avísame de inmediato.' },
     alambre:  { animado: true, txt:'Sé que un alambre que pica es muy incómodo. Vamos a calmarlo con estos pasos.' },
@@ -736,11 +737,11 @@ function scAbrirUrgencia(id){
   if (mood.animado) {
     avatarHTML = `
       <div class="avatar-urgencia-container">
-        <img src="avatar-ok.png" class="avatar-ok" alt="Dr. Miguel Alvarado" onerror="this.style.display='none'">
+        <img src="avatar-dr.png" class="avatar-ok" alt="Dr. Miguel Alvarado" onerror="this.style.display='none'">
         <img src="avatar-asustado.png" class="avatar-preocupado" alt="Dr. Miguel Alvarado Preocupado" onerror="this.style.display='none'">
       </div>`;
   } else {
-    avatarHTML = `<img src="avatar-ok.png" alt="Dr. Miguel Alvarado" style="width:52px; height:52px; border-radius:50%; border:2.5px solid var(--teal); object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'">`;
+    avatarHTML = `<img src="avatar-dr.png" alt="Dr. Miguel Alvarado" style="width:52px; height:52px; border-radius:50%; border:2.5px solid var(--teal); object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'">`;
   }
   
   document.getElementById('detCard').innerHTML = `
