@@ -96,6 +96,21 @@ img{max-width:100%; display:block}
 .modal-card h2{text-align:center; color:var(--azul-osc); font-size:1.15rem; margin-bottom:10px}
 .modal-card p{font-size:.9rem; color:var(--gris); line-height:1.6; margin-bottom:10px}
 .modal-card .btn-cerrar{display:block; width:100%; background:var(--azul); color:#fff; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:.92rem; margin-top:10px}
+
+/* Guía de cepillado (carrusel) */
+.cep-link{display:flex; align-items:center; justify-content:center; gap:6px; background:var(--azul-claro); color:var(--azul); font-weight:700; font-size:.84rem; border:none; border-radius:10px; padding:11px; width:100%; margin-top:8px}
+.cep-img-wrap{background:#0b1a2e; border-radius:14px; overflow:hidden; margin-bottom:12px}
+.cep-img-wrap img{width:100%; display:block}
+.cep-contador{text-align:center; font-size:.76rem; color:var(--gris); font-weight:600; margin-bottom:4px}
+.cep-caption{font-size:.9rem; color:var(--tinta); text-align:center; line-height:1.5; margin-bottom:14px; min-height:44px}
+.cep-dots{display:flex; justify-content:center; gap:6px; margin-bottom:14px}
+.cep-dots .dot{width:7px; height:7px; border-radius:50%; background:var(--borde)}
+.cep-dots .dot.active{background:var(--azul); width:18px; border-radius:4px; transition:.2s}
+.cep-nav{display:flex; gap:10px}
+.cep-nav button{flex:1; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:.88rem}
+.cep-nav .prev{background:var(--fondo); color:var(--azul-osc); border:1.5px solid var(--borde)}
+.cep-nav .next{background:var(--azul); color:#fff}
+.cep-nav button:disabled{opacity:.4}
 .home-sub{text-align:center; color:var(--gris); font-size:.88rem; margin-bottom:18px}
 
 .menu-cards{display:flex; flex-direction:column; gap:12px; margin-top:8px}
@@ -192,6 +207,14 @@ img{max-width:100%; display:block}
 
 /* Checklist */
 .chk-settings{background:#fff; border:1.5px solid var(--borde); border-radius:14px; padding:12px 14px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; box-shadow:var(--sombra)}
+.empaque-card{background:#fff; border:1.5px solid var(--borde); border-radius:14px; padding:14px; margin-bottom:14px; box-shadow:var(--sombra); display:none}
+.empaque-card.show{display:block}
+.empaque-card label{font-size:.86rem; font-weight:600; display:block; margin-bottom:4px}
+.empaque-card .ayuda{font-size:.76rem; color:var(--gris); margin-bottom:8px; line-height:1.4}
+.empaque-card input{width:100%; border:1.5px solid var(--borde); border-radius:10px; padding:10px 12px; font-size:.88rem; font-family:inherit; color:var(--tinta)}
+.empaque-card input:focus{outline:none; border-color:var(--teal-osc)}
+.elasticos-msg{background:var(--azul-claro); border-radius:12px; padding:10px 14px; font-size:.82rem; color:var(--azul-osc); margin-bottom:14px; display:none; text-align:center; font-weight:600}
+.elasticos-msg.show{display:block}
 .chk-settings span{font-size:.86rem; font-weight:600}
 .chk-avatar-wrap{text-align:center; margin-bottom:8px}
 .chk-avatar-wrap img{width:84px; height:84px; border-radius:50%; border:3px solid var(--teal); margin:0 auto 6px; object-fit:cover}
@@ -329,6 +352,14 @@ img{max-width:100%; display:block}
       <label class="switch"><input type="checkbox" id="toggleElasticos" onchange="scToggleElasticos()"><span class="sl"></span></label>
     </div>
 
+    <div class="empaque-card" id="empaqueCard">
+      <label>🖼️ Animal o ciudad del empaque</label>
+      <div class="ayuda">Nos ayuda a identificar el calibre y grosor exactos de tus elásticos (ej. "Kanguro — mediano, 4.5 oz, 3/16").</div>
+      <input type="text" id="inputEmpaque" placeholder="Ej. Kanguro, Canguro, Guadalajara..." oninput="scGuardarEmpaque()">
+    </div>
+
+    <div class="elasticos-msg" id="elasticosMsg"></div>
+
     <div class="progreso-wrap">
       <div class="progreso-txt"><span>Progreso de hoy</span><span id="progresoNum">0/0</span></div>
       <div class="progreso-bar"><div class="progreso-fill" id="progresoFill" style="width:0%"></div></div>
@@ -366,6 +397,21 @@ img{max-width:100%; display:block}
     <p>Así la abres directo desde tu pantalla de inicio, como cualquier otra app — y funciona incluso sin internet.</p>
     <div id="instalarContenido"></div>
     <button class="btn-cerrar" onclick="scCerrarInstalar()">Entendido</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalCepillado">
+  <div class="modal-card">
+    <h2>🪥 Guía de cepillado paso a paso</h2>
+    <div class="cep-img-wrap"><img id="cepImg" src="cepillado-1.png" alt="Paso de cepillado"></div>
+    <div class="cep-contador" id="cepContador">Paso 1 de 6</div>
+    <div class="cep-caption" id="cepCaption"></div>
+    <div class="cep-dots" id="cepDots"></div>
+    <div class="cep-nav">
+      <button class="prev" id="cepBtnPrev" onclick="scCepilladoNav(-1)">← Anterior</button>
+      <button class="next" id="cepBtnNext" onclick="scCepilladoNav(1)">Siguiente →</button>
+    </div>
+    <button class="btn-cerrar" onclick="scCerrarCepillado()">Cerrar</button>
   </div>
 </div>
 
@@ -514,7 +560,7 @@ const URGENCIAS = [
 /* ---------- Datos: GUÍA POR TABS ---------- */
 const GUIA = {
   higiene: { label:"Higiene", ico:"🪥", cards:[
-    { h:"Cepillado", items:[
+    { h:"Cepillado", extra:"cepillado", items:[
       "Cepíllate después de cada comida, sin excepción.",
       "Usa un cepillo especial para ortodoncia (cerdas en forma de V, hechas para rodear el bracket) — limpia mucho mejor que un cepillo normal.",
       "Ángulo de 45° hacia la encía por encima del bracket, y hacia arriba por debajo.",
@@ -575,13 +621,25 @@ function scChecklistItems(){
     { id:"hilo", label:"Hilo dental (una vez al día)" },
     { id:"enj", label:"Enjuague con flúor antes de dormir" }
   ];
-  if (scGetElasticos()) base.splice(4,0,{ id:"elas", label:"Usé mis elásticos como indicado" });
+  if (scGetElasticos()){
+    base.splice(4, 0,
+      { id:"elas_manana", label:"Elásticos — mañana" },
+      { id:"elas_tarde", label:"Elásticos — tarde" },
+      { id:"elas_noche", label:"Elásticos — noche" }
+    );
+  }
   return base;
+}
+function scGetEmpaque(){ return localStorage.getItem('sc_elastico_empaque') || ''; }
+function scGuardarEmpaque(){
+  const v = document.getElementById('inputEmpaque').value;
+  localStorage.setItem('sc_elastico_empaque', v);
 }
 function scGetElasticos(){ return localStorage.getItem('sc_elasticos') === '1'; }
 function scToggleElasticos(){
   const v = document.getElementById('toggleElasticos').checked;
   localStorage.setItem('sc_elasticos', v ? '1':'0');
+  document.getElementById('empaqueCard').classList.toggle('show', v);
   scRenderChecklist();
 }
 function scGetEstadoHoy(){
@@ -615,6 +673,8 @@ function scToggleItem(id){
 }
 function scRenderChecklist(){
   document.getElementById('toggleElasticos').checked = scGetElasticos();
+  document.getElementById('empaqueCard').classList.toggle('show', scGetElasticos());
+  document.getElementById('inputEmpaque').value = scGetEmpaque();
   document.getElementById('fechaHoyTxt').textContent = new Date().toLocaleDateString('es-MX',{weekday:'long', day:'numeric', month:'long'});
   const items = scChecklistItems();
   const data = scGetEstadoHoy();
@@ -629,6 +689,19 @@ function scRenderChecklist(){
   const total = items.length;
   document.getElementById('progresoNum').textContent = `${done}/${total}`;
   document.getElementById('progresoFill').style.width = total ? `${Math.round(done/total*100)}%` : '0%';
+
+  const elasticosMsgEl = document.getElementById('elasticosMsg');
+  if (scGetElasticos()){
+    const elasDone = ['elas_manana','elas_tarde','elas_noche'].filter(id => data.marcados[id]).length;
+    let msg = '';
+    if (elasDone === 3) msg = '🌟 ¡Elásticos completos hoy! Así se corrige tu mordida más rápido, sigue así.';
+    else if (elasDone === 0) msg = '💪 No olvides tus elásticos hoy — cada toma cuenta para tu tratamiento.';
+    else msg = `👍 Vas ${elasDone}/3 con tus elásticos hoy — ¡tú puedes con las que faltan!`;
+    elasticosMsgEl.textContent = msg;
+    elasticosMsgEl.classList.add('show');
+  } else {
+    elasticosMsgEl.classList.remove('show');
+  }
 
   const chkImg = document.getElementById('chkAvatarImg');
   const chkMsg = document.getElementById('chkAvatarMsg');
@@ -771,7 +844,8 @@ function scRenderGuia(){
       if (c.chips){
         return `<div class="guia-card"><h3>${c.h}</h3><div class="chip-row">${c.chips.map(ch=>`<span class="chip ${c.tipo}">${ch}</span>`).join('')}</div></div>`;
       }
-      return `<div class="guia-card"><h3>${c.h}</h3><ul>${c.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
+      const extraBtn = c.extra === 'cepillado' ? `<button class="cep-link" onclick="scAbrirCepillado()">🪥 Ver guía visual paso a paso</button>` : '';
+      return `<div class="guia-card"><h3>${c.h}</h3><ul>${c.items.map(i=>`<li>${i}</li>`).join('')}</ul>${extraBtn}</div>`;
     }).join('');
     return `<div class="tab-panel ${k===scTabActual?'active':''}" id="panel-${k}">${cards}</div>`;
   }).join('');
@@ -779,6 +853,40 @@ function scRenderGuia(){
 function scCambiarTab(k){
   scTabActual = k;
   scRenderGuia();
+}
+
+/* ---------- Guía de cepillado (carrusel) ---------- */
+const CEPILLADO_PASOS = [
+  { img:"cepillado-1.png", texto:"Arriba del bracket: cepillo en ángulo de 45° hacia la encía, con movimientos circulares suaves." },
+  { img:"cepillado-2.png", texto:"Abajo del bracket: angula el cepillo hacia arriba, también con movimientos circulares." },
+  { img:"cepillado-3.png", texto:"Sobre el bracket y el alambre, arriba: movimientos horizontales cortos y suaves." },
+  { img:"cepillado-4.png", texto:"Repite el mismo movimiento horizontal sobre los brackets de abajo." },
+  { img:"cepillado-5.png", texto:"No olvides las caras internas (linguales/palatinas): de arriba hacia abajo." },
+  { img:"cepillado-6.png", texto:"Termina con el cepillo interdental entre cada bracket, subiendo y bajando." }
+];
+let scCepIdx = 0;
+function scAbrirCepillado(){
+  scCepIdx = 0;
+  scCepilladoRender();
+  document.getElementById('modalCepillado').classList.add('show');
+}
+function scCerrarCepillado(){
+  document.getElementById('modalCepillado').classList.remove('show');
+}
+function scCepilladoNav(dir){
+  const nuevo = scCepIdx + dir;
+  if (nuevo < 0 || nuevo >= CEPILLADO_PASOS.length) return;
+  scCepIdx = nuevo;
+  scCepilladoRender();
+}
+function scCepilladoRender(){
+  const paso = CEPILLADO_PASOS[scCepIdx];
+  document.getElementById('cepImg').src = paso.img;
+  document.getElementById('cepContador').textContent = `Paso ${scCepIdx+1} de ${CEPILLADO_PASOS.length}`;
+  document.getElementById('cepCaption').textContent = paso.texto;
+  document.getElementById('cepDots').innerHTML = CEPILLADO_PASOS.map((_,i) => `<div class="dot ${i===scCepIdx?'active':''}"></div>`).join('');
+  document.getElementById('cepBtnPrev').disabled = scCepIdx === 0;
+  document.getElementById('cepBtnNext').disabled = scCepIdx === CEPILLADO_PASOS.length - 1;
 }
 
 /* ---------- Init ---------- */

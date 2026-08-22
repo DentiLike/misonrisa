@@ -1,5 +1,5 @@
 // Mi Sonrisa by Dentilike — v18
-const CACHE_NAME = "misonrisa-v18";
+const CACHE_NAME = "misonrisa-v22";
 const ASSETS = [
   "./",
   "./index.html",
@@ -12,7 +12,13 @@ const ASSETS = [
   "./logo-dentilike.png",
   "./logo-dentilike-compact.png",
   "./icon-maskable.png",
-  "./og-image.jpg"
+  "./og-image.jpg",
+  "./cepillado-1.png",
+  "./cepillado-2.png",
+  "./cepillado-3.png",
+  "./cepillado-4.png",
+  "./cepillado-5.png",
+  "./cepillado-6.png"
 ];
 
 self.addEventListener("install", (e) => {
