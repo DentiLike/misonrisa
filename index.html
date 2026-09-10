@@ -117,9 +117,44 @@ img{max-width:100%; display:block}
 .menu-card{background:#fff; border-radius:16px; padding:16px; box-shadow:var(--sombra); border:1.5px solid var(--borde); display:flex; align-items:center; gap:14px; text-align:left; border-left:5px solid var(--azul)}
 .menu-card.urg{border-left-color:var(--rojo)}
 .menu-card.chk{border-left-color:var(--teal-osc)}
+.menu-card.citas{border-left-color:var(--azul)}
 .menu-card .ico{font-size:2.4rem; flex-shrink:0}
 .menu-card .txt b{display:block; font-size:1rem; color:var(--tinta)}
 .menu-card .txt span{font-size:.8rem; color:var(--gris)}
+
+/* Mis Citas — estilo degradado moderno */
+.citas-panel{background:linear-gradient(160deg, var(--azul), var(--azul-osc)); border-radius:20px; padding:20px; margin-top:4px; box-shadow:0 12px 30px rgba(20,64,110,.28)}
+.citas-panel .panel-head{color:#fff; font-weight:700; font-size:1.15rem; font-family:'Fredoka',sans-serif; margin-bottom:3px}
+.citas-panel .panel-sub{color:rgba(255,255,255,.72); font-size:.8rem; margin-bottom:16px}
+
+.cita-card{background:rgba(255,255,255,.12); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.2); border-radius:15px; padding:15px; margin-bottom:13px}
+.cita-card:last-child{margin-bottom:0}
+.cita-card .cita-fecha{font-size:.7rem; color:var(--teal); font-weight:700; text-transform:uppercase; letter-spacing:.03em}
+.cita-card .cita-dia{font-size:1.15rem; font-weight:700; color:#fff; margin:3px 0 6px; font-family:'Fredoka',sans-serif}
+.cita-card .cita-hora{display:inline-flex; align-items:center; gap:6px; font-size:.88rem; color:rgba(255,255,255,.9); font-weight:600; margin-bottom:3px}
+.cita-card .cita-motivo{font-size:.83rem; color:rgba(255,255,255,.72)}
+.cita-card .cita-estado{display:inline-block; font-size:.68rem; font-weight:700; padding:4px 11px; border-radius:999px; margin-top:9px}
+.cita-card .cita-estado.confirmada{background:rgba(16,185,129,.25); color:#6ee7b7}
+.cita-card .cita-estado.pendiente{background:rgba(245,158,11,.25); color:#fcd34d}
+.cita-card .btn-confirmar{display:block; width:100%; background:var(--teal); color:#0f172a; border:none; border-radius:11px; padding:11px; font-weight:700; font-size:.86rem; margin-top:12px}
+.cita-card .ya-confirmada{text-align:center; font-size:.8rem; color:#6ee7b7; font-weight:600; margin-top:12px}
+
+.citas-vacio{text-align:center; padding:20px 10px; color:rgba(255,255,255,.8)}
+.citas-vacio .ico-big{font-size:2.6rem; margin-bottom:10px}
+.citas-vacio p{font-size:.85rem; line-height:1.5}
+
+.btn-desvincular{display:block; margin:14px auto 0; background:none; border:none; color:rgba(255,255,255,.6); font-size:.78rem; text-decoration:underline; cursor:pointer}
+
+/* Vincular (candado) — mismo estilo degradado */
+.citas-vincular{background:linear-gradient(160deg, var(--azul), var(--azul-osc)); border-radius:20px; padding:22px; text-align:center; box-shadow:0 12px 30px rgba(20,64,110,.28); margin-top:4px}
+.citas-vincular .ico-big{font-size:2.6rem; margin-bottom:8px}
+.citas-vincular h3{color:#fff; font-size:1.1rem; margin-bottom:6px; font-family:'Fredoka',sans-serif}
+.citas-vincular p{font-size:.85rem; color:rgba(255,255,255,.75); line-height:1.5; margin-bottom:16px}
+.citas-vincular label{display:block; text-align:left; font-size:.78rem; font-weight:700; color:var(--teal); margin:12px 0 5px}
+.citas-vincular input{width:100%; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); border-radius:11px; padding:12px; font-size:.9rem; font-family:inherit; color:#fff}
+.citas-vincular input::placeholder{color:rgba(255,255,255,.5)}
+.citas-vincular input:focus{outline:none; border-color:var(--teal)}
+.citas-vincular .btn-vincular{width:100%; background:var(--teal); color:#0f172a; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:.92rem; margin-top:16px}
 
 .streak-pill{display:inline-flex; align-items:center; gap:6px; background:var(--azul-claro); color:var(--azul-osc); font-weight:700; font-size:.8rem; padding:6px 12px; border-radius:999px; margin:10px auto 0}
 .streak-row{text-align:center}
@@ -300,6 +335,10 @@ img{max-width:100%; display:block}
         <div class="ico">✅</div>
         <div class="txt"><b>Mi checklist de hoy</b><span id="homeChkResumen">Marca tus tareas del día</span></div>
       </button>
+      <button class="menu-card citas" onclick="scIr('citas')">
+        <div class="ico">📆</div>
+        <div class="txt"><b>Mis citas</b><span id="homeCitasResumen">Consulta y confirma tus próximas citas</span></div>
+      </button>
       <a class="menu-card" style="border-left-color:var(--oro); text-decoration:none" href="#" onclick="scAgendarCita(); return false;">
         <div class="ico">📅</div>
         <div class="txt"><b>Quiero agendar mi cita de control</b><span>Te contactamos por WhatsApp</span></div>
@@ -370,12 +409,19 @@ img{max-width:100%; display:block}
     <div class="streak-row" style="margin-bottom:18px"><span class="streak-pill" id="streakPill2">🔥 0 días de racha</span></div>
   </div>
 
+  <!-- MIS CITAS -->
+  <div class="screen" id="screenCitas">
+    <div class="sec-head"><h1>Mis citas</h1><p>Consulta y confirma tus próximas citas con el Dr. Miguel Alvarado.</p></div>
+    <div id="citasContenido"></div>
+  </div>
+
 </div>
 
 <div class="bottomnav">
   <button class="nav-btn active" data-nav="home" onclick="scIr('home')"><span class="ic">🏠</span>Inicio</button>
   <button class="nav-btn" data-nav="guia" onclick="scIr('guia')"><span class="ic">📖</span>Guía</button>
   <button class="nav-btn" data-nav="urgencia" onclick="scIr('urgencia')"><span class="ic">🚨</span>Urgencia</button>
+  <button class="nav-btn" data-nav="citas" onclick="scIr('citas')"><span class="ic">📆</span>Citas</button>
   <button class="nav-btn" data-nav="checklist" onclick="scIr('checklist')"><span class="ic">✅</span>Checklist</button>
 </div>
 
@@ -415,11 +461,48 @@ img{max-width:100%; display:block}
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
 <script>
 /* ============================================================
    Mi Sonrisa by Dentilike — cuidados con brackets
-   Single-file PWA. Sin backend. localStorage únicamente.
+   PWA con Firebase para "Mis Citas" (lectura segura).
    ============================================================ */
+
+// ===== Firebase =====
+const firebaseConfig = {
+  apiKey: "AIzaSyC4Kws78y5K3-1IuBibxCOo-a11ccuNYUE",
+  authDomain: "misonrisa-citas.firebaseapp.com",
+  projectId: "misonrisa-citas",
+  storageBucket: "misonrisa-citas.firebasestorage.app",
+  messagingSenderId: "601464011103",
+  appId: "1:601464011103:web:e03150d9b86eb40a451eea"
+};
+let scDB = null, scAuth = null, scFbOK = false, scAuthListo = false;
+try {
+  firebase.initializeApp(firebaseConfig);
+  scDB = firebase.firestore();
+  scAuth = firebase.auth();
+  scFbOK = true;
+} catch(e) { console.error('Firebase init error', e); }
+
+async function scIniciarAuth(){
+  if(!scFbOK) return;
+  try { await scAuth.signInAnonymously(); scAuthListo = true; }
+  catch(e){ console.error('auth error', e); }
+}
+
+// Hash idéntico al de DentiAgenda: teléfono + código → llave
+async function scHashLlave(telefono, codigo){
+  const tel = (telefono||'').replace(/\D/g,'');
+  const cod = (codigo||'').trim();
+  const texto = `misonrisa|${tel}|${cod}`;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 const CONFIG = {
   telClinica: "524446036659",
   nombreClinica: "Dr. Miguel Alvarado · Dentilike"
@@ -729,11 +812,12 @@ const scTitulos = {
   urgencia:{t:"Urgencias", s:"¿Qué te está pasando?"},
   urgenciaDetalle:{t:"Urgencias", s:"Qué hacer ahora"},
   guia:{t:"Guía de cuidados", s:"Higiene, dieta, dolor y citas"},
-  checklist:{t:"Mi checklist", s:"Tu rutina de hoy"}
+  checklist:{t:"Mi checklist", s:"Tu rutina de hoy"},
+  citas:{t:"Mis citas", s:"Tus próximas citas"}
 };
 function scMostrar(nombre){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const map = {home:'screenHome', urgencia:'screenUrgencia', urgenciaDetalle:'screenUrgenciaDetalle', guia:'screenGuia', checklist:'screenChecklist'};
+  const map = {home:'screenHome', urgencia:'screenUrgencia', urgenciaDetalle:'screenUrgenciaDetalle', guia:'screenGuia', checklist:'screenChecklist', citas:'screenCitas'};
   document.getElementById(map[nombre]).classList.add('active');
   const info = scTitulos[nombre] || scTitulos.home;
   document.getElementById('tbTitulo').textContent = info.t;
@@ -749,6 +833,7 @@ function scIr(nombre){
   if (nombre === 'urgencia') scRenderUrgList();
   if (nombre === 'guia') scRenderGuia();
   if (nombre === 'checklist') scRenderChecklist();
+  if (nombre === 'citas') scRenderCitas();
 }
 function scVolver(){
   if (scStack.length > 1) scStack.pop();
@@ -789,6 +874,167 @@ function scAgendarCita(){
   const texto = encodeURIComponent("Hola Dr. Miguel, quiero agendar mi cita de control.");
   window.open(`https://wa.me/${CONFIG.telClinica}?text=${texto}`, '_blank');
 }
+
+/* ============================================================
+   MIS CITAS  (conectado a Firebase — lectura segura por hash)
+   ============================================================ */
+
+let scCitasCache = [];   // citas leídas de Firebase
+let scCitasCargando = false;
+
+function scCitasVinculado(){ return localStorage.getItem('sc_citas_tel') && localStorage.getItem('sc_citas_codigo'); }
+
+async function scVincularCitas(){
+  const tel = (document.getElementById('inputCitasTel').value||'').replace(/\D/g,'');
+  const cod = (document.getElementById('inputCitasCodigo').value||'').trim();
+  if (tel.length !== 10){ alert('Escribe tu número de teléfono a 10 dígitos.'); return; }
+  if (!cod){ alert('Escribe el código que te dio el Dr. Miguel.'); return; }
+  // Intentar leer de Firebase con ese teléfono+código
+  const btn = document.querySelector('.btn-vincular');
+  if(btn){ btn.textContent = 'Verificando…'; btn.disabled = true; }
+  const ok = await scLeerCitasDeFirebase(tel, cod);
+  if(ok === null){
+    if(btn){ btn.textContent = 'Ver mis citas'; btn.disabled = false; }
+    alert('No pudimos conectar. Revisa tu internet e intenta de nuevo.');
+    return;
+  }
+  if(ok === false){
+    if(btn){ btn.textContent = 'Ver mis citas'; btn.disabled = false; }
+    alert('No encontramos citas con esos datos. Revisa que tu teléfono y código sean los que te dio el Dr. Miguel.');
+    return;
+  }
+  // ok === true: guardar vínculo
+  localStorage.setItem('sc_citas_tel', tel);
+  localStorage.setItem('sc_citas_codigo', cod);
+  scRenderCitas();
+}
+
+function scDesvincularCitas(){
+  if (!confirm('¿Quieres desvincular este dispositivo? Tendrás que volver a poner tu teléfono y código.')) return;
+  localStorage.removeItem('sc_citas_tel');
+  localStorage.removeItem('sc_citas_codigo');
+  scCitasCache = [];
+  scRenderCitas();
+}
+
+// Lee el documento del paciente en Firebase usando el hash.
+// Devuelve: true (encontró), false (no existe), null (error de conexión)
+async function scLeerCitasDeFirebase(tel, cod){
+  if(!scFbOK) return null;
+  try{
+    if(!scAuthListo) await scIniciarAuth();
+    const llave = await scHashLlave(tel, cod);
+    const doc = await scDB.collection('citas_pacientes').doc(llave).get();
+    if(!doc.exists){ return false; }
+    const data = doc.data();
+    scCitasCache = (data.citas||[]).slice().sort((a,b)=> (a.fechaISO||'').localeCompare(b.fechaISO||''));
+    return true;
+  }catch(e){ console.error('leer citas error', e); return null; }
+}
+
+function scObtenerCitas(){ return scCitasCache; }
+
+function scFechaLegible(iso){
+  const [a,m,d] = iso.split('-').map(Number);
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const fecha = new Date(a, m-1, d);
+  return { dia:d, mes:meses[m-1], anio:a, diaSemana:dias[fecha.getDay()] };
+}
+
+async function scConfirmarCita(id){
+  // Actualiza el estado de esa cita a 'confirmada' en Firebase
+  const tel = localStorage.getItem('sc_citas_tel');
+  const cod = localStorage.getItem('sc_citas_codigo');
+  const cita = scCitasCache.find(c => String(c.id) === String(id));
+  if(cita) cita.estado = 'status-green';
+  // Guardar de vuelta en la nube
+  if(scFbOK && tel && cod){
+    try{
+      if(!scAuthListo) await scIniciarAuth();
+      const llave = await scHashLlave(tel, cod);
+      const doc = await scDB.collection('citas_pacientes').doc(llave).get();
+      const nombre = doc.exists ? (doc.data().nombre||'') : '';
+      await scDB.collection('citas_pacientes').doc(llave).set({
+        nombre: nombre,
+        citas: scCitasCache
+      }, { merge:true });
+    }catch(e){ console.error('confirmar error', e); }
+  }
+  // Avisar al doctor por WhatsApp
+  const c = cita ? scFechaLegible(cita.fechaISO) : null;
+  const msg = c ? `Hola Dr. Miguel, confirmo mi cita del ${c.dia} de ${c.mes} a las ${cita.hora}.` : 'Hola Dr. Miguel, confirmo mi cita.';
+  window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
+  scRenderCitas();
+}
+
+function scEsConfirmada(estado){
+  return estado === 'confirmada' || estado === 'status-green';
+}
+
+async function scRenderCitas(){
+  const cont = document.getElementById('citasContenido');
+  const resumenHome = document.getElementById('homeCitasResumen');
+
+  // No vinculado: pedir teléfono + código
+  if (!scCitasVinculado()){
+    if (resumenHome) resumenHome.textContent = 'Vincula tu teléfono para ver tus citas';
+    cont.innerHTML = `
+      <div class="citas-vincular">
+        <div class="ico-big">🔒</div>
+        <h3>Vincula tus citas</h3>
+        <p>Para ver tus citas de forma segura, escribe tu teléfono y el código que te dio el Dr. Miguel en tu consulta.</p>
+        <label>Tu teléfono (10 dígitos)</label>
+        <input type="tel" id="inputCitasTel" placeholder="Ej. 444 123 4567" inputmode="numeric">
+        <label>Código de acceso</label>
+        <input type="text" id="inputCitasCodigo" placeholder="El que te dieron en consulta">
+        <button class="btn-vincular" onclick="scVincularCitas()">Ver mis citas</button>
+      </div>`;
+    return;
+  }
+
+  // Vinculado: refrescar desde Firebase si aún no hay cache
+  if(!scCitasCache.length && !scCitasCargando){
+    scCitasCargando = true;
+    cont.innerHTML = `<div class="citas-panel"><div class="panel-head">Tus próximas citas</div><div class="panel-sub">Cargando…</div></div>`;
+    const tel = localStorage.getItem('sc_citas_tel');
+    const cod = localStorage.getItem('sc_citas_codigo');
+    await scLeerCitasDeFirebase(tel, cod);
+    scCitasCargando = false;
+  }
+
+  const citas = scObtenerCitas();
+  if (resumenHome) resumenHome.textContent = citas.length ? `Tienes ${citas.length} cita${citas.length===1?'':'s'} próxima${citas.length===1?'':'s'}` : 'No tienes citas próximas';
+
+  let cuerpo = '';
+  if (!citas.length){
+    cuerpo = `<div class="citas-vacio"><div class="ico-big">📭</div><p>No tienes citas próximas agendadas.<br>Cuando el Dr. Miguel te agende una, aparecerá aquí.</p></div>`;
+  } else {
+    cuerpo = citas.map(c => {
+      const f = scFechaLegible(c.fechaISO);
+      const esConf = scEsConfirmada(c.estado);
+      const accion = esConf
+        ? `<div class="ya-confirmada">✓ Cita confirmada</div>`
+        : `<button class="btn-confirmar" onclick="scConfirmarCita('${c.id}')">Confirmar asistencia</button>`;
+      return `
+        <div class="cita-card">
+          <div class="cita-fecha">${f.diaSemana} ${f.dia} de ${f.mes}</div>
+          <div class="cita-dia">${c.motivo}</div>
+          <div class="cita-hora">🕐 ${c.hora} hrs</div>
+          <span class="cita-estado ${esConf?'confirmada':'pendiente'}">${esConf ? '✓ Confirmada' : 'Por confirmar'}</span>
+          ${accion}
+        </div>`;
+    }).join('');
+  }
+  document.getElementById('citasContenido').innerHTML = `
+    <div class="citas-panel">
+      <div class="panel-head">Tus próximas citas</div>
+      <div class="panel-sub">Con el Dr. Miguel Alvarado · Dentilike</div>
+      ${cuerpo}
+      <button class="btn-desvincular" onclick="scDesvincularCitas()">Desvincular este dispositivo</button>
+    </div>`;
+}
+
 function scAbrirUrgencia(id){
   const u = URGENCIAS.find(x => x.id === id);
   if (!u) return;
@@ -894,6 +1140,8 @@ window.addEventListener('DOMContentLoaded', () => {
   scGetEstadoHoy(); // dispara cierre de día anterior si aplica
   scRenderChecklist();
   scActualizarBannerInstalar();
+  scIniciarAuth(); // login anónimo de Firebase para leer citas
+  scRenderCitas(); // actualiza el resumen de citas en el home
   if ('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   }
