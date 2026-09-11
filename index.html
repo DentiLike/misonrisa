@@ -352,9 +352,9 @@ img{max-width:100%; display:block}
   <!-- HOME -->
   <div class="screen active" id="screenHome">
     <div class="avatar-box">
-      <img src="avatar-dr.png" class="avatar-menu" alt="Dr. Miguel Alvarado" onclick="scTipAleatorio()">
+      <img src="avatar-dr.png" id="homeAvatarImg" class="avatar-menu" alt="Mikes Molares" onclick="scTipAleatorio()">
     </div>
-    <div class="bocadillo" id="bocadillo">¡Hola! Soy Mikes Molares 🦷 Aquí te ayudo a cuidar tus brackets, resolver urgencias y no perder tu racha diaria. Tócame para un tip del día 👆</div>
+    <div class="bocadillo" id="bocadillo">¡Hola! Soy <b>Mikes Molares</b> 🦷, el asistente del Dr. Miguel Alvarado y tu compañero en este viaje hacia una nueva sonrisa. Tócame para un tip del día 👆</div>
     <a href="#" class="link-bienvenida" onclick="scMostrarBienvenida(); return false;">🎉 ¿Te acaban de colocar los brackets? Toca aquí</a>
     <div class="home-title">¿Qué necesitas hoy?</div>
     <div class="streak-row"><span class="streak-pill" id="streakPill">🔥 0 días de racha</span></div>
@@ -554,6 +554,59 @@ const CONFIG = {
   telClinica: "524446036659",
   nombreClinica: "Dr. Miguel Alvarado · Dentilike"
 };
+
+/* ============================================================
+   AVATARES FESTIVOS
+   Para agregar una festividad nueva:
+   1. Sube la imagen del avatar (ej. avatar-navidad.png) al repo
+   2. Descomenta o agrega su línea abajo con las fechas
+   Fechas: {mes, dia} — el rango [desde, hasta] es inclusivo.
+   Si 'imagen' no existe en el repo, se usa el avatar normal (no rompe).
+   ============================================================ */
+const FESTIVIDADES = [
+  { id:'patrias',   imagen:'avatar-patrias.png',   saludo:'¡Felices Fiestas Patrias! 🇲🇽',   desde:{m:9,  d:10}, hasta:{m:9,  d:17} },
+  { id:'halloween', imagen:'avatar-halloween.png', saludo:'¡Feliz Halloween! 🎃',            desde:{m:10, d:26}, hasta:{m:10, d:31} },
+  { id:'muertos',   imagen:'avatar-muertos.png',   saludo:'¡Feliz Día de Muertos! 💀🌼',      desde:{m:10, d:30}, hasta:{m:11, d:2}  },
+  { id:'navidad',   imagen:'avatar-navidad.png',   saludo:'¡Feliz Navidad! 🎄',              desde:{m:12, d:18}, hasta:{m:12, d:25} },
+  { id:'anonuevo',  imagen:'avatar-anonuevo.png',  saludo:'¡Feliz Año Nuevo! 🎉',            desde:{m:12, d:29}, hasta:{m:1,  d:2}  },
+  { id:'reyes',     imagen:'avatar-reyes.png',     saludo:'¡Feliz Día de Reyes! 👑',         desde:{m:1,  d:3},  hasta:{m:1,  d:6}  },
+  { id:'valentin',  imagen:'avatar-valentin.png',  saludo:'¡Feliz San Valentín! 💘',         desde:{m:2,  d:10}, hasta:{m:2,  d:14} }
+];
+
+// Devuelve las festividades activas hoy (puede haber 2 traslapadas: Halloween/Muertos)
+function scFestividadesHoy(){
+  const hoy = new Date();
+  const m = hoy.getMonth()+1, d = hoy.getDate();
+  const enRango = (f)=>{
+    const desde = f.desde, hasta = f.hasta;
+    // rango que cruza fin de año (ej. dic->ene)
+    if(desde.m > hasta.m){
+      return (m>desde.m || (m===desde.m && d>=desde.d)) || (m<hasta.m || (m===hasta.m && d<=hasta.d));
+    }
+    // rango normal dentro del mismo año
+    if(m < desde.m || m > hasta.m) return false;
+    if(m===desde.m && d<desde.d) return false;
+    if(m===hasta.m && d>hasta.d) return false;
+    return true;
+  };
+  return FESTIVIDADES.filter(enRango);
+}
+
+// Aplica el avatar y saludo festivo si corresponde
+let scFestivoActual = null;
+function scAplicarFestividad(){
+  const activas = scFestividadesHoy();
+  if(!activas.length){ scFestivoActual = null; return; }
+  // Si hay varias (Halloween + Muertos), elige aleatoria en cada carga
+  const elegida = activas[Math.floor(Math.random()*activas.length)];
+  scFestivoActual = elegida;
+  const img = document.getElementById('homeAvatarImg');
+  if(img){
+    // Si la imagen festiva no carga, vuelve al avatar normal
+    img.onerror = function(){ this.onerror=null; this.src='avatar-dr.png'; };
+    img.src = elegida.imagen;
+  }
+}
 
 /* ---------- Instalación como app (PWA) ---------- */
 let scDeferredPrompt = null;
@@ -1176,6 +1229,31 @@ async function scRenderCitas(){
   scActualizarAvisoProximaCita();
 }
 
+// Traduce número FDI a nombre entendible para el paciente
+function scNombreDiente(codigo){
+  if(!codigo) return '';
+  const c = String(codigo).trim();
+  // zonas / texto libre que no es número
+  if(!/^\d{1,2}$/.test(c)) return c; // ya viene como "Boca completa", "Cuadrante...", etc.
+  const num = c;
+  // nombre del diente según último dígito
+  const tipos = {
+    '1':'Incisivo central', '2':'Incisivo lateral', '3':'Canino (colmillo)',
+    '4':'Primer premolar', '5':'Segundo premolar', '6':'Primer molar',
+    '7':'Segundo molar', '8':'Tercer molar (muela del juicio)'
+  };
+  // cuadrante según primer dígito (FDI adulto 1-4, temporal 5-8)
+  const cuad = {
+    '1':'superior derecho', '2':'superior izquierdo', '3':'inferior izquierdo', '4':'inferior derecho',
+    '5':'superior derecho (de leche)', '6':'superior izquierdo (de leche)', '7':'inferior izquierdo (de leche)', '8':'inferior derecho (de leche)'
+  };
+  if(num.length !== 2) return `Diente ${num}`;
+  const q = num[0], t = num[1];
+  const nombreT = tipos[t] || 'Diente';
+  const nombreQ = cuad[q] || '';
+  return `${nombreT} ${nombreQ}`.trim();
+}
+
 // Barra de fases de ortodoncia (solo si el paciente está en ortodoncia)
 function scRenderOrtodoncia(){
   if(!scOrtoData || !scOrtoData.activa) return '';
@@ -1231,7 +1309,7 @@ function scRenderPlanTratamiento(){
   });
   const items = orden.map(t=>{
     const ico = ICONOS[t.tipo] || '📋';
-    const dienteTxt = t.diente ? `Diente/zona: ${t.diente}` : '';
+    const dienteTxt = t.diente ? scNombreDiente(t.diente) : '';
     const urgente = (!t.hecho && t.prioridad==='urgente') ? `<span class="pt-urgente">Urgente</span>` : '';
     const estado = t.hecho
       ? `<span class="pt-estado hecho">✓ Hecho</span>`
@@ -1261,18 +1339,22 @@ function scRenderPlanTratamiento(){
 function scActualizarAvisoProximaCita(){
   const boc = document.getElementById('bocadillo');
   if(!boc) return;
+  const saludoFestivo = scFestivoActual ? `<div style="font-size:.95rem; font-weight:700; color:var(--teal-osc); margin-bottom:6px;">${scFestivoActual.saludo}</div>` : '';
   const prox = scProximaCita();
   if(prox){
     const f = scFechaLegible(prox.fechaISO);
-    boc.innerHTML = `¡Hola! Soy Mikes Molares 🦷<br>
+    boc.innerHTML = `${saludoFestivo}¡Hola! Soy <b>Mikes Molares</b> 🦷, asistente del Dr. Miguel Alvarado.<br>
       <div style="margin-top:10px; background:var(--azul-claro); border-radius:12px; padding:12px 10px;">
         <div style="font-size:.78rem; color:var(--azul); font-weight:600; text-transform:uppercase; letter-spacing:.03em;">📅 Tu próxima cita</div>
         <div style="font-size:1.15rem; color:var(--azul-osc); font-weight:800; font-family:'Fredoka',sans-serif; margin:4px 0 2px;">${f.diaSemana} ${f.dia} de ${f.mes}</div>
         <div style="font-size:.95rem; color:var(--tinta); font-weight:700;">🕐 ${prox.hora} hrs</div>
       </div>
       <div style="margin-top:8px; font-size:.85rem;">¡Ahí te espero! 😁</div>`;
+  } else if(scFestivoActual){
+    // sin próxima cita pero con festividad
+    boc.innerHTML = `${saludoFestivo}¡Hola! Soy <b>Mikes Molares</b> 🦷, el asistente del Dr. Miguel Alvarado y tu compañero en este viaje hacia una nueva sonrisa. Tócame para un tip del día 👆`;
   }
-  // si no hay próxima cita, se queda el saludo normal
+  // si no hay ni cita ni festividad, se queda el saludo normal del HTML
 }
 
 function scAbrirUrgencia(id){
@@ -1378,6 +1460,8 @@ function scCepilladoRender(){
 /* ---------- Init ---------- */
 window.addEventListener('DOMContentLoaded', () => {
   scGetEstadoHoy(); // dispara cierre de día anterior si aplica
+  scAplicarFestividad(); // avatar y saludo festivo si aplica
+  scActualizarAvisoProximaCita(); // saludo (con festividad si hay)
   scRenderChecklist();
   scActualizarBannerInstalar();
   scIniciarAuth(); // login anónimo de Firebase para leer citas
