@@ -137,6 +137,7 @@ img{max-width:100%; display:block}
 .cita-card .cita-estado.confirmada{background:rgba(16,185,129,.25); color:#6ee7b7}
 .cita-card .cita-estado.pendiente{background:rgba(245,158,11,.25); color:#fcd34d}
 .cita-card .btn-confirmar{display:block; width:100%; background:var(--teal); color:#0f172a; border:none; border-radius:11px; padding:11px; font-weight:700; font-size:.86rem; margin-top:12px}
+.cita-card .btn-reagendar{display:block; width:100%; background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:11px; padding:10px; font-weight:600; font-size:.82rem; margin-top:8px}
 .cita-card .ya-confirmada{text-align:center; font-size:.8rem; color:#6ee7b7; font-weight:600; margin-top:12px}
 
 .citas-vacio{text-align:center; padding:20px 10px; color:rgba(255,255,255,.8)}
@@ -943,33 +944,67 @@ function scFechaLegible(iso){
 }
 
 async function scConfirmarCita(id){
-  // Actualiza el estado de esa cita a 'confirmada' en Firebase
   const tel = localStorage.getItem('sc_citas_tel');
   const cod = localStorage.getItem('sc_citas_codigo');
   const cita = scCitasCache.find(c => String(c.id) === String(id));
   if(cita) cita.estado = 'status-green';
+  let nombrePaciente = '';
   // Guardar de vuelta en la nube
   if(scFbOK && tel && cod){
     try{
       if(!scAuthListo) await scIniciarAuth();
       const llave = await scHashLlave(tel, cod);
       const doc = await scDB.collection('citas_pacientes').doc(llave).get();
-      const nombre = doc.exists ? (doc.data().nombre||'') : '';
+      nombrePaciente = doc.exists ? (doc.data().nombre||'') : '';
       await scDB.collection('citas_pacientes').doc(llave).set({
-        nombre: nombre,
+        nombre: nombrePaciente,
         citas: scCitasCache
       }, { merge:true });
     }catch(e){ console.error('confirmar error', e); }
   }
   // Avisar al doctor por WhatsApp
   const c = cita ? scFechaLegible(cita.fechaISO) : null;
-  const msg = c ? `Hola Dr. Miguel, confirmo mi cita del ${c.dia} de ${c.mes} a las ${cita.hora}.` : 'Hola Dr. Miguel, confirmo mi cita.';
+  const quien = nombrePaciente ? `Soy ${nombrePaciente}. ` : '';
+  const msg = c
+    ? `Hola Dr. Miguel. ${quien}✅ Confirmo mi asistencia a la cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${cita.hora} hrs (${cita.motivo}).`
+    : `Hola Dr. Miguel. ${quien}Confirmo mi cita.`;
   window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
   scRenderCitas();
 }
 
+async function scReagendarCita(id){
+  const tel = localStorage.getItem('sc_citas_tel');
+  const cod = localStorage.getItem('sc_citas_codigo');
+  const cita = scCitasCache.find(c => String(c.id) === String(id));
+  let nombrePaciente = '';
+  if(scFbOK && tel && cod){
+    try{
+      if(!scAuthListo) await scIniciarAuth();
+      const llave = await scHashLlave(tel, cod);
+      const doc = await scDB.collection('citas_pacientes').doc(llave).get();
+      nombrePaciente = doc.exists ? (doc.data().nombre||'') : '';
+    }catch(e){ console.error('reagendar lookup error', e); }
+  }
+  const c = cita ? scFechaLegible(cita.fechaISO) : null;
+  const quien = nombrePaciente ? `Soy ${nombrePaciente}. ` : '';
+  const msg = c
+    ? `Hola Dr. Miguel. ${quien}📅 Necesito reagendar mi cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${cita.hora} hrs (${cita.motivo}). ¿Qué otra fecha tiene disponible?`
+    : `Hola Dr. Miguel. ${quien}Necesito reagendar mi cita, ¿qué disponibilidad tiene?`;
+  window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
 function scEsConfirmada(estado){
   return estado === 'confirmada' || estado === 'status-green';
+}
+
+// Devuelve la próxima cita futura (la más cercana), o null
+function scProximaCita(){
+  if(!scCitasCache || !scCitasCache.length) return null;
+  const hoyISO = scHoyISO();
+  const futuras = scCitasCache
+    .filter(c => c.fechaISO >= hoyISO)
+    .sort((a,b)=> (a.fechaISO+a.hora).localeCompare(b.fechaISO+b.hora));
+  return futuras.length ? futuras[0] : null;
 }
 
 async function scRenderCitas(){
@@ -1023,6 +1058,7 @@ async function scRenderCitas(){
           <div class="cita-hora">🕐 ${c.hora} hrs</div>
           <span class="cita-estado ${esConf?'confirmada':'pendiente'}">${esConf ? '✓ Confirmada' : 'Por confirmar'}</span>
           ${accion}
+          <button class="btn-reagendar" onclick="scReagendarCita('${c.id}')">📅 Necesito reagendar</button>
         </div>`;
     }).join('');
   }
@@ -1033,6 +1069,20 @@ async function scRenderCitas(){
       ${cuerpo}
       <button class="btn-desvincular" onclick="scDesvincularCitas()">Desvincular este dispositivo</button>
     </div>`;
+
+  scActualizarAvisoProximaCita();
+}
+
+// El avatar (bocadillo del home) avisa la próxima cita
+function scActualizarAvisoProximaCita(){
+  const boc = document.getElementById('bocadillo');
+  if(!boc) return;
+  const prox = scProximaCita();
+  if(prox){
+    const f = scFechaLegible(prox.fechaISO);
+    boc.innerHTML = `¡Hola! Soy Mikes Molares 🦷 Tu próxima cita es el <b>${f.diaSemana} ${f.dia} de ${f.mes}</b> a las <b>${prox.hora} hrs</b>. ¡Ahí te espero! 😁`;
+  }
+  // si no hay próxima cita, se queda el saludo normal
 }
 
 function scAbrirUrgencia(id){
