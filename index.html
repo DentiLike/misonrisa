@@ -147,6 +147,20 @@ img{max-width:100%; display:block}
 .plan-t .pt-urgente{font-size:.62rem; font-weight:700; color:var(--rojo); background:#fef2f2; padding:2px 7px; border-radius:999px; margin-left:6px}
 .plan-vacio{text-align:center; padding:20px 10px; color:var(--gris); font-size:.85rem}
 .plan-nota{font-size:.72rem; color:var(--gris-cl); text-align:center; margin-top:12px; line-height:1.4; font-style:italic}
+
+/* Barra de ortodoncia (fases) */
+.orto-panel{background:linear-gradient(160deg,var(--teal-osc),var(--azul)); border-radius:20px; padding:20px; margin-top:16px; box-shadow:0 12px 30px rgba(20,64,110,.25)}
+.orto-panel .orto-head{color:#fff; font-weight:700; font-size:1.1rem; font-family:'Fredoka',sans-serif; margin-bottom:3px}
+.orto-panel .orto-sub{color:rgba(255,255,255,.8); font-size:.8rem; margin-bottom:16px}
+.orto-fases-bar{display:flex; align-items:flex-start; gap:0; position:relative}
+.orto-f{flex:1; text-align:center; position:relative}
+.orto-f .circulo{width:38px; height:38px; border-radius:50%; margin:0 auto 8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1rem; background:rgba(255,255,255,.2); color:rgba(255,255,255,.7); border:2px solid rgba(255,255,255,.3)}
+.orto-f.activa .circulo{background:#fff; color:var(--azul-osc); border-color:#fff; box-shadow:0 0 0 5px rgba(255,255,255,.25)}
+.orto-f.completa .circulo{background:var(--teal); color:#0f172a; border-color:var(--teal)}
+.orto-f .etiqueta{font-size:.68rem; color:rgba(255,255,255,.85); line-height:1.3; padding:0 3px}
+.orto-f.activa .etiqueta{color:#fff; font-weight:700}
+.orto-linea{position:absolute; top:19px; height:3px; background:rgba(255,255,255,.3); z-index:0}
+.orto-actual-txt{text-align:center; color:#fff; font-size:.9rem; font-weight:600; margin-top:14px; background:rgba(255,255,255,.14); border-radius:10px; padding:10px}
 .citas-panel .panel-head{color:#fff; font-weight:700; font-size:1.15rem; font-family:'Fredoka',sans-serif; margin-bottom:3px}
 .citas-panel .panel-sub{color:rgba(255,255,255,.72); font-size:.8rem; margin-bottom:16px}
 
@@ -275,6 +289,12 @@ img{max-width:100%; display:block}
 .empaque-card input:focus{outline:none; border-color:var(--teal-osc)}
 .elasticos-msg{background:var(--azul-claro); border-radius:12px; padding:10px 14px; font-size:.82rem; color:var(--azul-osc); margin-bottom:14px; display:none; text-align:center; font-weight:600}
 .elasticos-msg.show{display:block}
+
+/* Recomendación de salud en checklist */
+.reco-salud{background:#fff; border:1.5px solid var(--borde); border-left:5px solid var(--teal); border-radius:14px; padding:14px 16px; margin-bottom:16px; box-shadow:var(--sombra); display:flex; gap:12px; align-items:flex-start}
+.reco-salud .reco-ico{font-size:1.6rem; flex-shrink:0}
+.reco-salud .reco-txt b{display:block; color:var(--azul-osc); font-size:.85rem; margin-bottom:3px}
+.reco-salud .reco-txt span{font-size:.82rem; color:var(--gris); line-height:1.5}
 .chk-settings span{font-size:.86rem; font-weight:600}
 .chk-avatar-wrap{text-align:center; margin-bottom:8px}
 .chk-avatar-wrap img{width:84px; height:84px; border-radius:50%; border:3px solid var(--teal); margin:0 auto 6px; object-fit:cover}
@@ -430,6 +450,8 @@ img{max-width:100%; display:block}
     </div>
 
     <div class="chk-list" id="chkList"></div>
+
+    <div class="reco-salud" id="recoSalud"></div>
 
     <div class="streak-row" style="margin-bottom:18px"><span class="streak-pill" id="streakPill2">🔥 0 días de racha</span></div>
   </div>
@@ -726,11 +748,11 @@ function scChecklistItems(){
     { id:"des", label:"Cepillado después del desayuno" },
     { id:"com", label:"Cepillado después de la comida" },
     { id:"cen", label:"Cepillado después de la cena" },
-    { id:"hilo", label:"Hilo dental (una vez al día)" },
-    { id:"enj", label:"Enjuague con flúor antes de dormir" }
+    { id:"hilo", label:"Hilo dental o Superfloss (1 vez al día)" },
+    { id:"interdental", label:"Cepillo interdental entre brackets" }
   ];
   if (scGetElasticos()){
-    base.splice(4, 0,
+    base.splice(5, 0,
       { id:"elas_manana", label:"Elásticos — mañana" },
       { id:"elas_tarde", label:"Elásticos — tarde" },
       { id:"elas_noche", label:"Elásticos — noche" }
@@ -825,9 +847,30 @@ function scRenderChecklist(){
   }
 
   const racha = parseInt(localStorage.getItem('sc_racha')||"0",10);
-  document.getElementById('streakPill').textContent = `🔥 ${racha} día${racha===1?'':'s'} de racha`;
-  document.getElementById('streakPill2').textContent = `🔥 ${racha} día${racha===1?'':'s'} de racha`;
+  document.getElementById('streakPill').textContent = `🔥 ${racha} día${racha===1?'':'s'} de racha`;  document.getElementById('streakPill2').textContent = `🔥 ${racha} día${racha===1?'':'s'} de racha`;
   document.getElementById('homeChkResumen').textContent = total ? `Hoy: ${done}/${total} completado` : 'Marca tus tareas del día';
+  scRenderRecoSalud();
+}
+
+const RECOS_SALUD = [
+  { ico:'🪥', t:'Técnica de cepillado', d:'Cepilla en ángulo de 45° hacia la encía, por arriba y por abajo del bracket. Movimientos suaves y circulares.' },
+  { ico:'🥤', t:'Cuida las bebidas', d:'Los refrescos y bebidas azucaradas favorecen manchas blancas alrededor de los brackets. Prefiere agua.' },
+  { ico:'🍎', t:'Alimentos duros', d:'Corta manzanas, zanahorias y pan duro en trozos pequeños. Nunca muerdas directo con los dientes de adelante.' },
+  { ico:'🦷', t:'Cepillo interdental', d:'Es tu mejor aliado: limpia entre bracket y bracket donde el cepillo normal no llega.' },
+  { ico:'⏰', t:'Cepíllate a tiempo', d:'Lo ideal es cepillar dentro de los 30 minutos después de comer, para que la comida no se quede atrapada.' },
+  { ico:'🩹', t:'Cera de ortodoncia', d:'Si un bracket o alambre te roza, seca la zona y coloca un poquito de cera. Trae siempre contigo.' },
+  { ico:'💧', t:'Enjuague natural', d:'Si no puedes cepillarte, al menos enjuágate con agua vigorosamente para arrastrar restos de comida.' },
+  { ico:'😬', t:'No olvides tus citas', d:'Cada ajuste acorta tu tratamiento. Faltar solo lo alarga. ¡No dejes pasar tus controles!' },
+  { ico:'🍬', t:'Cuidado con lo pegajoso', d:'Chicles, caramelos suaves y gomitas pueden despegar brackets. Mejor evítalos durante el tratamiento.' },
+  { ico:'🌙', t:'Cepillado nocturno', d:'El de la noche es el más importante: mientras duermes produces menos saliva y las bacterias trabajan más.' }
+];
+function scRenderRecoSalud(){
+  const cont = document.getElementById('recoSalud');
+  if(!cont) return;
+  // rota según el día del año, para que cambie diario
+  const dia = Math.floor(Date.now()/86400000);
+  const r = RECOS_SALUD[dia % RECOS_SALUD.length];
+  cont.innerHTML = `<div class="reco-ico">${r.ico}</div><div class="reco-txt"><b>Recomendación de hoy: ${r.t}</b><span>${r.d}</span></div>`;
 }
 
 /* ---------- Navegación ---------- */
@@ -954,11 +997,13 @@ async function scLeerCitasDeFirebase(tel, cod){
     const data = doc.data();
     scCitasCache = (data.citas||[]).slice().sort((a,b)=> (a.fechaISO||'').localeCompare(b.fechaISO||''));
     scPlanCache = data.plan || [];
+    scOrtoData = { activa: !!data.ortodoncia, fase: data.ortoFase || 1 };
     return true;
   }catch(e){ console.error('leer citas error', e); return null; }
 }
 
 let scPlanCache = [];
+let scOrtoData = { activa:false, fase:1 };
 
 function scObtenerCitas(){ return scCitasCache; }
 
@@ -1125,9 +1170,41 @@ async function scRenderCitas(){
       ${cuerpo}
       <button class="btn-desvincular" onclick="scDesvincularCitas()">Desvincular este dispositivo</button>
     </div>
+    ${scRenderOrtodoncia()}
     ${scRenderPlanTratamiento()}`;
 
   scActualizarAvisoProximaCita();
+}
+
+// Barra de fases de ortodoncia (solo si el paciente está en ortodoncia)
+function scRenderOrtodoncia(){
+  if(!scOrtoData || !scOrtoData.activa) return '';
+  const fase = scOrtoData.fase || 1;
+  const FASES = [
+    { n:1, txt:'Alineación y nivelación' },
+    { n:2, txt:'Trabajo / biomecánica' },
+    { n:3, txt:'Finalización y estabilización' }
+  ];
+  const items = FASES.map(f=>{
+    let clase = '';
+    if(f.n < fase) clase = 'completa';
+    else if(f.n === fase) clase = 'activa';
+    const icono = f.n < fase ? '✓' : f.n;
+    return `<div class="orto-f ${clase}">
+      <div class="circulo">${icono}</div>
+      <div class="etiqueta">${f.txt}</div>
+    </div>`;
+  }).join('');
+  const faseActual = FASES.find(f=>f.n===fase);
+  return `<div class="orto-panel">
+    <div class="orto-head">😬 Tu tratamiento de ortodoncia</div>
+    <div class="orto-sub">Estas son las etapas de tu tratamiento</div>
+    <div class="orto-fases-bar">
+      <div class="orto-linea" style="left:16%; right:16%;"></div>
+      ${items}
+    </div>
+    <div class="orto-actual-txt">📍 Vas en la <b>Fase ${fase}: ${faseActual?faseActual.txt:''}</b></div>
+  </div>`;
 }
 
 // Renderiza el plan de tratamiento del paciente
