@@ -138,6 +138,7 @@ img{max-width:100%; display:block}
 .cita-card .cita-estado.pendiente{background:rgba(245,158,11,.25); color:#fcd34d}
 .cita-card .btn-confirmar{display:block; width:100%; background:var(--teal); color:#0f172a; border:none; border-radius:11px; padding:11px; font-weight:700; font-size:.86rem; margin-top:12px}
 .cita-card .btn-reagendar{display:block; width:100%; background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:11px; padding:10px; font-weight:600; font-size:.82rem; margin-top:8px}
+.cita-card .btn-cancelar{display:block; width:100%; background:none; color:#fca5a5; border:none; border-radius:11px; padding:8px; font-weight:600; font-size:.78rem; margin-top:6px; text-decoration:underline}
 .cita-card .ya-confirmada{text-align:center; font-size:.8rem; color:#6ee7b7; font-weight:600; margin-top:12px}
 
 .citas-vacio{text-align:center; padding:20px 10px; color:rgba(255,255,255,.8)}
@@ -973,6 +974,8 @@ async function scConfirmarCita(id){
 }
 
 async function scReagendarCita(id){
+  const propuesta = prompt('¿Qué día y hora te acomodaría mejor? (Ej: "martes por la tarde" o "15 de oct a las 5pm")\n\nEl Dr. Miguel revisará su agenda y te confirma.');
+  if(propuesta === null) return; // canceló el prompt
   const tel = localStorage.getItem('sc_citas_tel');
   const cod = localStorage.getItem('sc_citas_codigo');
   const cita = scCitasCache.find(c => String(c.id) === String(id));
@@ -987,9 +990,35 @@ async function scReagendarCita(id){
   }
   const c = cita ? scFechaLegible(cita.fechaISO) : null;
   const quien = nombrePaciente ? `Soy ${nombrePaciente}. ` : '';
+  const prop = propuesta.trim() ? ` Me acomodaría: ${propuesta.trim()}.` : '';
   const msg = c
-    ? `Hola Dr. Miguel. ${quien}📅 Necesito reagendar mi cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${cita.hora} hrs (${cita.motivo}). ¿Qué otra fecha tiene disponible?`
-    : `Hola Dr. Miguel. ${quien}Necesito reagendar mi cita, ¿qué disponibilidad tiene?`;
+    ? `Hola Dr. Miguel. ${quien}📅 Necesito reagendar mi cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${cita.hora} hrs (${cita.motivo}).${prop} ¿Tiene disponibilidad?`
+    : `Hola Dr. Miguel. ${quien}Necesito reagendar mi cita.${prop} ¿Tiene disponibilidad?`;
+  window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+async function scCancelarCita(id){
+  if(!confirm('¿Seguro que necesitas cancelar esta cita? Le avisaremos al Dr. Miguel por WhatsApp.')) return;
+  const propuesta = prompt('Si quieres reprogramarla, ¿qué día y hora te acomodaría?\n(Déjalo vacío si solo quieres cancelar sin nueva fecha)');
+  // si le da cancelar al prompt (null), igual seguimos con cancelación simple
+  const tel = localStorage.getItem('sc_citas_tel');
+  const cod = localStorage.getItem('sc_citas_codigo');
+  const cita = scCitasCache.find(c => String(c.id) === String(id));
+  let nombrePaciente = '';
+  if(scFbOK && tel && cod){
+    try{
+      if(!scAuthListo) await scIniciarAuth();
+      const llave = await scHashLlave(tel, cod);
+      const doc = await scDB.collection('citas_pacientes').doc(llave).get();
+      nombrePaciente = doc.exists ? (doc.data().nombre||'') : '';
+    }catch(e){ console.error('cancelar lookup error', e); }
+  }
+  const c = cita ? scFechaLegible(cita.fechaISO) : null;
+  const quien = nombrePaciente ? `Soy ${nombrePaciente}. ` : '';
+  const prop = (propuesta && propuesta.trim()) ? ` Si es posible, me gustaría reprogramarla para: ${propuesta.trim()}.` : '';
+  const msg = c
+    ? `Hola Dr. Miguel. ${quien}❌ Necesito cancelar mi cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${cita.hora} hrs (${cita.motivo}).${prop}`
+    : `Hola Dr. Miguel. ${quien}Necesito cancelar mi cita.${prop}`;
   window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
@@ -1059,6 +1088,7 @@ async function scRenderCitas(){
           <span class="cita-estado ${esConf?'confirmada':'pendiente'}">${esConf ? '✓ Confirmada' : 'Por confirmar'}</span>
           ${accion}
           <button class="btn-reagendar" onclick="scReagendarCita('${c.id}')">📅 Necesito reagendar</button>
+          <button class="btn-cancelar" onclick="scCancelarCita('${c.id}')">Cancelar cita</button>
         </div>`;
     }).join('');
   }
@@ -1080,7 +1110,13 @@ function scActualizarAvisoProximaCita(){
   const prox = scProximaCita();
   if(prox){
     const f = scFechaLegible(prox.fechaISO);
-    boc.innerHTML = `¡Hola! Soy Mikes Molares 🦷 Tu próxima cita es el <b>${f.diaSemana} ${f.dia} de ${f.mes}</b> a las <b>${prox.hora} hrs</b>. ¡Ahí te espero! 😁`;
+    boc.innerHTML = `¡Hola! Soy Mikes Molares 🦷<br>
+      <div style="margin-top:10px; background:var(--azul-claro); border-radius:12px; padding:12px 10px;">
+        <div style="font-size:.78rem; color:var(--azul); font-weight:600; text-transform:uppercase; letter-spacing:.03em;">📅 Tu próxima cita</div>
+        <div style="font-size:1.15rem; color:var(--azul-osc); font-weight:800; font-family:'Fredoka',sans-serif; margin:4px 0 2px;">${f.diaSemana} ${f.dia} de ${f.mes}</div>
+        <div style="font-size:.95rem; color:var(--tinta); font-weight:700;">🕐 ${prox.hora} hrs</div>
+      </div>
+      <div style="margin-top:8px; font-size:.85rem;">¡Ahí te espero! 😁</div>`;
   }
   // si no hay próxima cita, se queda el saludo normal
 }
