@@ -124,6 +124,29 @@ img{max-width:100%; display:block}
 
 /* Mis Citas — estilo degradado moderno */
 .citas-panel{background:linear-gradient(160deg, var(--azul), var(--azul-osc)); border-radius:20px; padding:20px; margin-top:4px; box-shadow:0 12px 30px rgba(20,64,110,.28)}
+
+/* Plan de tratamiento (paciente) */
+.plan-panel{background:#fff; border:1.5px solid var(--borde); border-radius:20px; padding:20px; margin-top:16px; box-shadow:var(--sombra)}
+.plan-panel .plan-head{color:var(--azul-osc); font-weight:700; font-size:1.1rem; font-family:'Fredoka',sans-serif; margin-bottom:2px}
+.plan-panel .plan-sub{color:var(--gris); font-size:.8rem; margin-bottom:14px}
+.plan-progreso{background:var(--fondo); border-radius:12px; padding:12px 14px; margin-bottom:14px}
+.plan-progreso .pp-txt{display:flex; justify-content:space-between; font-size:.82rem; color:var(--gris); font-weight:600; margin-bottom:7px}
+.plan-progreso .pp-bar{height:10px; background:#e2e8f0; border-radius:999px; overflow:hidden}
+.plan-progreso .pp-fill{height:100%; background:linear-gradient(90deg,var(--teal),var(--ok)); border-radius:999px; transition:width .4s}
+.plan-t{display:flex; align-items:center; gap:11px; padding:11px 0; border-bottom:1px solid var(--borde)}
+.plan-t:last-child{border-bottom:none}
+.plan-t .pt-ico{width:34px; height:34px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.1rem; background:var(--azul-claro)}
+.plan-t.hecho .pt-ico{background:#ecfdf5}
+.plan-t .pt-info{flex:1}
+.plan-t .pt-tipo{font-size:.9rem; font-weight:700; color:var(--tinta)}
+.plan-t.hecho .pt-tipo{color:var(--gris); text-decoration:line-through}
+.plan-t .pt-diente{font-size:.76rem; color:var(--gris)}
+.plan-t .pt-estado{font-size:.68rem; font-weight:700; padding:3px 9px; border-radius:999px; flex-shrink:0}
+.plan-t .pt-estado.pend{background:#fffbeb; color:#b45309}
+.plan-t .pt-estado.hecho{background:#ecfdf5; color:var(--ok)}
+.plan-t .pt-urgente{font-size:.62rem; font-weight:700; color:var(--rojo); background:#fef2f2; padding:2px 7px; border-radius:999px; margin-left:6px}
+.plan-vacio{text-align:center; padding:20px 10px; color:var(--gris); font-size:.85rem}
+.plan-nota{font-size:.72rem; color:var(--gris-cl); text-align:center; margin-top:12px; line-height:1.4; font-style:italic}
 .citas-panel .panel-head{color:#fff; font-weight:700; font-size:1.15rem; font-family:'Fredoka',sans-serif; margin-bottom:3px}
 .citas-panel .panel-sub{color:rgba(255,255,255,.72); font-size:.8rem; margin-bottom:16px}
 
@@ -930,9 +953,12 @@ async function scLeerCitasDeFirebase(tel, cod){
     if(!doc.exists){ return false; }
     const data = doc.data();
     scCitasCache = (data.citas||[]).slice().sort((a,b)=> (a.fechaISO||'').localeCompare(b.fechaISO||''));
+    scPlanCache = data.plan || [];
     return true;
   }catch(e){ console.error('leer citas error', e); return null; }
 }
+
+let scPlanCache = [];
 
 function scObtenerCitas(){ return scCitasCache; }
 
@@ -1098,9 +1124,60 @@ async function scRenderCitas(){
       <div class="panel-sub">Con el Dr. Miguel Alvarado · Dentilike</div>
       ${cuerpo}
       <button class="btn-desvincular" onclick="scDesvincularCitas()">Desvincular este dispositivo</button>
-    </div>`;
+    </div>
+    ${scRenderPlanTratamiento()}`;
 
   scActualizarAvisoProximaCita();
+}
+
+// Renderiza el plan de tratamiento del paciente
+function scRenderPlanTratamiento(){
+  const plan = scPlanCache || [];
+  const ICONOS = {
+    'Caries / Resina':'🦷','Endodoncia':'🩹','Perio (limpieza profunda)':'✨','Extracción':'🦷',
+    'Extracción de terceros molares':'🦷','Limpieza (profilaxis)':'✨','Prótesis':'🦷','Corona':'👑','Ortodoncia':'😬','Otro':'📋'
+  };
+  if(!plan.length){
+    return `<div class="plan-panel">
+      <div class="plan-head">🦷 Mi plan de tratamiento</div>
+      <div class="plan-vacio">Aún no tienes tratamientos registrados en tu plan.<br>El Dr. Miguel lo irá agregando en tus consultas.</div>
+    </div>`;
+  }
+  const total = plan.length;
+  const hechos = plan.filter(t=>t.hecho).length;
+  const pct = Math.round(hechos/total*100);
+  // ordenar: pendientes urgentes primero, luego pendientes normales, luego hechos
+  const orden = plan.slice().sort((a,b)=>{
+    if(a.hecho !== b.hecho) return a.hecho?1:-1;
+    const pa = a.prioridad==='urgente'?0:1, pb = b.prioridad==='urgente'?0:1;
+    return pa-pb;
+  });
+  const items = orden.map(t=>{
+    const ico = ICONOS[t.tipo] || '📋';
+    const dienteTxt = t.diente ? `Diente/zona: ${t.diente}` : '';
+    const urgente = (!t.hecho && t.prioridad==='urgente') ? `<span class="pt-urgente">Urgente</span>` : '';
+    const estado = t.hecho
+      ? `<span class="pt-estado hecho">✓ Hecho</span>`
+      : `<span class="pt-estado pend">Pendiente</span>`;
+    return `<div class="plan-t ${t.hecho?'hecho':''}">
+      <div class="pt-ico">${ico}</div>
+      <div class="pt-info">
+        <div class="pt-tipo">${t.tipo}${urgente}</div>
+        ${dienteTxt ? `<div class="pt-diente">${dienteTxt}</div>` : ''}
+      </div>
+      ${estado}
+    </div>`;
+  }).join('');
+  return `<div class="plan-panel">
+    <div class="plan-head">🦷 Mi plan de tratamiento</div>
+    <div class="plan-sub">Lo que hemos hecho y lo que falta</div>
+    <div class="plan-progreso">
+      <div class="pp-txt"><span>Progreso</span><span>${hechos} de ${total} completado${total===1?'':'s'}</span></div>
+      <div class="pp-bar"><div class="pp-fill" style="width:${pct}%"></div></div>
+    </div>
+    ${items}
+    <div class="plan-nota">Este plan es tu guía. Los detalles y prioridades se definen en consulta con el Dr. Miguel Alvarado.</div>
+  </div>`;
 }
 
 // El avatar (bocadillo del home) avisa la próxima cita
