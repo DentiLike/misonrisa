@@ -1068,6 +1068,15 @@ function scFechaLegible(iso){
   return { dia:d, mes:meses[m-1], anio:a, diaSemana:dias[fecha.getDay()] };
 }
 
+// Convierte "16:00" a "4:00 PM"
+function scHoraAmPm(hora){
+  if(!hora || !hora.includes(':')) return hora || '';
+  let [h,m] = hora.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12; if(h === 0) h = 12;
+  return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
 async function scConfirmarCita(id){
   const tel = localStorage.getItem('sc_citas_tel');
   const cod = localStorage.getItem('sc_citas_codigo');
@@ -1091,7 +1100,7 @@ async function scConfirmarCita(id){
   const c = cita ? scFechaLegible(cita.fechaISO) : null;
   const quien = nombrePaciente ? `Soy ${nombrePaciente}. ` : '';
   const msg = c
-    ? `Hola Dr. Miguel. ${quien}✅ Confirmo mi asistencia a la cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${cita.hora} hrs (${cita.motivo}).`
+    ? `Hola Dr. Miguel. ${quien}✅ Confirmo mi asistencia a la cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${scHoraAmPm(cita.hora)} (${cita.motivo}).`
     : `Hola Dr. Miguel. ${quien}Confirmo mi cita.`;
   window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
   scRenderCitas();
@@ -1116,7 +1125,7 @@ async function scReagendarCita(id){
   const quien = nombrePaciente ? `Soy ${nombrePaciente}. ` : '';
   const prop = propuesta.trim() ? ` Me acomodaría: ${propuesta.trim()}.` : '';
   const msg = c
-    ? `Hola Dr. Miguel. ${quien}📅 Necesito reagendar mi cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${cita.hora} hrs (${cita.motivo}).${prop} ¿Tiene disponibilidad?`
+    ? `Hola Dr. Miguel. ${quien}📅 Necesito reagendar mi cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${scHoraAmPm(cita.hora)} (${cita.motivo}).${prop} ¿Tiene disponibilidad?`
     : `Hola Dr. Miguel. ${quien}Necesito reagendar mi cita.${prop} ¿Tiene disponibilidad?`;
   window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
 }
@@ -1141,7 +1150,7 @@ async function scCancelarCita(id){
   const quien = nombrePaciente ? `Soy ${nombrePaciente}. ` : '';
   const prop = (propuesta && propuesta.trim()) ? ` Si es posible, me gustaría reprogramarla para: ${propuesta.trim()}.` : '';
   const msg = c
-    ? `Hola Dr. Miguel. ${quien}❌ Necesito cancelar mi cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${cita.hora} hrs (${cita.motivo}).${prop}`
+    ? `Hola Dr. Miguel. ${quien}❌ Necesito cancelar mi cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${scHoraAmPm(cita.hora)} (${cita.motivo}).${prop}`
     : `Hola Dr. Miguel. ${quien}Necesito cancelar mi cita.${prop}`;
   window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
 }
@@ -1208,7 +1217,7 @@ async function scRenderCitas(){
         <div class="cita-card">
           <div class="cita-fecha">${f.diaSemana} ${f.dia} de ${f.mes}</div>
           <div class="cita-dia">${c.motivo}</div>
-          <div class="cita-hora">🕐 ${c.hora} hrs</div>
+          <div class="cita-hora">🕐 ${scHoraAmPm(c.hora)}</div>
           <span class="cita-estado ${esConf?'confirmada':'pendiente'}">${esConf ? '✓ Confirmada' : 'Por confirmar'}</span>
           ${accion}
           <button class="btn-reagendar" onclick="scReagendarCita('${c.id}')">📅 Necesito reagendar</button>
@@ -1347,7 +1356,7 @@ function scActualizarAvisoProximaCita(){
       <div style="margin-top:10px; background:var(--azul-claro); border-radius:12px; padding:12px 10px;">
         <div style="font-size:.78rem; color:var(--azul); font-weight:600; text-transform:uppercase; letter-spacing:.03em;">📅 Tu próxima cita</div>
         <div style="font-size:1.15rem; color:var(--azul-osc); font-weight:800; font-family:'Fredoka',sans-serif; margin:4px 0 2px;">${f.diaSemana} ${f.dia} de ${f.mes}</div>
-        <div style="font-size:.95rem; color:var(--tinta); font-weight:700;">🕐 ${prox.hora} hrs</div>
+        <div style="font-size:.95rem; color:var(--tinta); font-weight:700;">🕐 ${scHoraAmPm(prox.hora)}</div>
       </div>
       <div style="margin-top:8px; font-size:.85rem;">¡Ahí te espero! 😁</div>`;
   } else if(scFestivoActual){
