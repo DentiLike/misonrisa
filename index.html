@@ -1063,13 +1063,17 @@ async function scLeerCitasDeFirebase(tel, cod){
     const data = doc.data();
     scCitasCache = (data.citas||[]).slice().sort((a,b)=> (a.fechaISO||'').localeCompare(b.fechaISO||''));
     scPlanCache = data.plan || [];
-    scOrtoData = { activa: !!data.ortodoncia, fase: data.ortoFase || 1 };
+    scOrtoData = {
+      activa: !!data.ortodoncia,
+      porcentaje: data.ortoPorcentaje || 0,
+      faseTexto: data.ortoFaseTexto || 'Fase 1: Alineación y nivelación'
+    };
     return true;
   }catch(e){ console.error('leer citas error', e); return null; }
 }
 
 let scPlanCache = [];
-let scOrtoData = { activa:false, fase:1 };
+let scOrtoData = { activa:false, porcentaje:0, faseTexto:'Fase 1: Alineación y nivelación' };
 
 function scObtenerCitas(){ return scCitasCache; }
 
@@ -1330,34 +1334,34 @@ function scNombreDiente(codigo){
   return `${nombreT} ${nombreQ}`.trim();
 }
 
-// Barra de fases de ortodoncia (solo si el paciente está en ortodoncia)
+// Barra de progreso de ortodoncia (solo si el paciente está en ortodoncia)
 function scRenderOrtodoncia(){
   if(!scOrtoData || !scOrtoData.activa) return '';
-  const fase = scOrtoData.fase || 1;
-  const FASES = [
-    { n:1, txt:'Alineación y nivelación' },
-    { n:2, txt:'Trabajo / biomecánica' },
-    { n:3, txt:'Finalización y estabilización' }
-  ];
-  const items = FASES.map(f=>{
-    let clase = '';
-    if(f.n < fase) clase = 'completa';
-    else if(f.n === fase) clase = 'activa';
-    const icono = f.n < fase ? '✓' : f.n;
-    return `<div class="orto-f ${clase}">
-      <div class="circulo">${icono}</div>
-      <div class="etiqueta">${f.txt}</div>
-    </div>`;
-  }).join('');
-  const faseActual = FASES.find(f=>f.n===fase);
+  const pct = scOrtoData.porcentaje || 0;
+  const fase = scOrtoData.faseTexto || 'Fase 1: Alineación y nivelación';
+  // frase motivadora según el %
+  let frase;
+  if(pct === 0) frase = 'Tu tratamiento está por comenzar. ¡Pronto verás tu avance aquí! 🦷✨';
+  else if(pct === 100) frase = '🎉 ¡Tratamiento completo! Tu constancia forjó una sonrisa increíble. ¡Felicidades! 🏆😁';
+  else if(pct <= 10) frase = '¡Felicidades por dar el primer paso! 👏 Sabemos que requiere paciencia, pero cada día valdrá la pena. 💪';
+  else if(pct <= 25) frase = '¡Gran trabajo! 🙌 Tu sonrisa ya empezó a transformarse. Sigue con esa actitud. 🔥';
+  else if(pct <= 50) frase = '¡Vas excelente! 🚀 Cada ajuste cuenta. Tu disciplina está esculpiendo resultados increíbles. 😎';
+  else if(pct <= 75) frase = '¡Ya falta menos! ⏳ La paciencia rinde frutos. Avanzamos firmemente gracias a tu compromiso. 🦷';
+  else frase = '¡Últimos detalles! 🎯 Afinando tu mordida para esa sonrisa perfecta. ¡No aflojes! 🌟';
+
   return `<div class="orto-panel">
     <div class="orto-head">😬 Tu tratamiento de ortodoncia</div>
-    <div class="orto-sub">Estas son las etapas de tu tratamiento</div>
-    <div class="orto-fases-bar">
-      <div class="orto-linea" style="left:16%; right:16%;"></div>
-      ${items}
+    <div class="orto-sub">${fase}</div>
+    <div style="display:flex; justify-content:flex-end; align-items:baseline; margin-bottom:6px;">
+      <span style="font-size:2rem; font-weight:800; color:#fff; font-family:'Fredoka',sans-serif;">${pct}%</span>
     </div>
-    <div class="orto-actual-txt">📍 Vas en la <b>Fase ${fase}: ${faseActual?faseActual.txt:''}</b></div>
+    <div style="width:100%; height:16px; background:rgba(255,255,255,.2); border-radius:999px; overflow:hidden;">
+      <div style="height:100%; width:${pct}%; background:var(--teal); border-radius:999px; transition:width .6s ease;"></div>
+    </div>
+    <div style="margin-top:14px; background:rgba(255,255,255,.14); border-radius:10px; padding:12px; color:#fff; font-size:.85rem; text-align:center; line-height:1.4;">${frase}</div>
+    <div style="margin-top:12px; font-size:.68rem; color:rgba(255,255,255,.6); line-height:1.4; text-align:center;">
+      Este porcentaje es una guía aproximada. Cada tratamiento es único y avanza según la respuesta biológica de tu cuerpo a la biomecánica. El avance puede variar —e incluso retroceder— si se despega un bracket o si se requiere ajustar la mecánica. Cuida mucho tus brackets para no retrasar tu progreso. 🦷
+    </div>
   </div>`;
 }
 
