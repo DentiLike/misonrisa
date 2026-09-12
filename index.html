@@ -166,6 +166,19 @@ img{max-width:100%; display:block}
 
 .cita-card{background:rgba(255,255,255,.12); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.2); border-radius:15px; padding:15px; margin-bottom:13px}
 .cita-card:last-child{margin-bottom:0}
+/* Estados por fecha */
+.cita-card.cita-pasada{opacity:.6; filter:grayscale(.5)}
+.cita-card.cita-hoy{border:2px solid #fcd34d; background:rgba(255,255,255,.16)}
+.cita-card.cita-futura{border:1px solid rgba(255,255,255,.25)}
+.badge-hoy{display:inline-block; background:#fcd34d; color:#0f172a; font-size:.62rem; font-weight:800; padding:2px 8px; border-radius:999px; margin-left:6px; vertical-align:middle}
+.asist-pregunta{font-size:.82rem; color:rgba(255,255,255,.85); font-weight:600; margin-top:12px; text-align:center}
+.asist-btns{display:flex; gap:8px; margin-top:8px}
+.btn-asist{flex:1; border:none; border-radius:10px; padding:10px; font-weight:700; font-size:.82rem; cursor:pointer}
+.btn-asist.si{background:var(--teal); color:#0f172a}
+.btn-asist.no{background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.3)}
+.asist-resultado{text-align:center; font-size:.82rem; font-weight:600; margin-top:12px; padding:8px; border-radius:10px}
+.asist-resultado.si{background:rgba(16,185,129,.2); color:#6ee7b7}
+.asist-resultado.no{background:rgba(148,163,184,.2); color:rgba(255,255,255,.7)}
 .cita-card .cita-fecha{font-size:.7rem; color:var(--teal); font-weight:700; text-transform:uppercase; letter-spacing:.03em}
 .cita-card .cita-dia{font-size:1.15rem; font-weight:700; color:#fff; margin:3px 0 6px; font-family:'Fredoka',sans-serif}
 .cita-card .cita-hora{display:inline-flex; align-items:center; gap:6px; font-size:.88rem; color:rgba(255,255,255,.9); font-weight:600; margin-bottom:3px}
@@ -1159,6 +1172,25 @@ function scEsConfirmada(estado){
   return estado === 'confirmada' || estado === 'status-green';
 }
 
+// El paciente marca si asistió o no a una cita pasada
+async function scMarcarAsistencia(id, asistio){
+  const tel = localStorage.getItem('sc_citas_tel');
+  const cod = localStorage.getItem('sc_citas_codigo');
+  const cita = scCitasCache.find(c => String(c.id) === String(id));
+  if(cita) cita.asistio = asistio;
+  // guardar en Firebase
+  if(scFbOK && tel && cod){
+    try{
+      if(!scAuthListo) await scIniciarAuth();
+      const llave = await scHashLlave(tel, cod);
+      const doc = await scDB.collection('citas_pacientes').doc(llave).get();
+      const nombre = doc.exists ? (doc.data().nombre||'') : '';
+      await scDB.collection('citas_pacientes').doc(llave).set({ nombre:nombre, citas: scCitasCache }, { merge:true });
+    }catch(e){ console.error('asistencia error', e); }
+  }
+  scRenderCitas();
+}
+
 // Devuelve la próxima cita futura (la más cercana), o null
 function scProximaCita(){
   if(!scCitasCache || !scCitasCache.length) return null;
@@ -1207,21 +1239,56 @@ async function scRenderCitas(){
   if (!citas.length){
     cuerpo = `<div class="citas-vacio"><div class="ico-big">📭</div><p>No tienes citas próximas agendadas.<br>Cuando el Dr. Miguel te agende una, aparecerá aquí.</p></div>`;
   } else {
+    const hoyISO = scHoyISO();
+    // hora actual para saber si una cita de HOY ya pasó
+    const ahora = new Date();
+    const horaActual = `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}`;
     cuerpo = citas.map(c => {
       const f = scFechaLegible(c.fechaISO);
       const esConf = scEsConfirmada(c.estado);
-      const accion = esConf
-        ? `<div class="ya-confirmada">✓ Cita confirmada</div>`
-        : `<button class="btn-confirmar" onclick="scConfirmarCita('${c.id}')">Confirmar asistencia</button>`;
+      // determinar si la cita ya pasó (fecha anterior a hoy, o es hoy pero ya pasó la hora)
+      const yaPaso = (c.fechaISO < hoyISO) || (c.fechaISO === hoyISO && (c.hora||'') < horaActual);
+      const esHoy = (c.fechaISO === hoyISO) && !yaPaso;
+      let claseTarjeta = 'cita-card';
+      if(yaPaso) claseTarjeta += ' cita-pasada';
+      else if(esHoy) claseTarjeta += ' cita-hoy';
+      else claseTarjeta += ' cita-futura';
+
+      let acciones = '';
+      if(yaPaso){
+        // cita pasada: sin botones de confirmar/reagendar. Solo marcar asistencia
+        const marcaAsist = c.asistio;
+        if(marcaAsist === true){
+          acciones = `<div class="asist-resultado si">✓ Asististe a esta cita</div>`;
+        } else if(marcaAsist === false){
+          acciones = `<div class="asist-resultado no">Marcaste que no asististe</div>`;
+        } else {
+          acciones = `<div class="asist-pregunta">¿Asististe a esta cita?</div>
+            <div class="asist-btns">
+              <button class="btn-asist si" onclick="scMarcarAsistencia('${c.id}', true)">Sí asistí</button>
+              <button class="btn-asist no" onclick="scMarcarAsistencia('${c.id}', false)">No asistí</button>
+            </div>`;
+        }
+      } else {
+        // cita hoy o futura: botones normales
+        const accion = esConf
+          ? `<div class="ya-confirmada">✓ Cita confirmada</div>`
+          : `<button class="btn-confirmar" onclick="scConfirmarCita('${c.id}')">Confirmar asistencia</button>`;
+        acciones = `${accion}
+          <button class="btn-reagendar" onclick="scReagendarCita('${c.id}')">📅 Necesito reagendar</button>
+          <button class="btn-cancelar" onclick="scCancelarCita('${c.id}')">Cancelar cita</button>`;
+      }
+
+      const etiquetaHoy = esHoy ? `<span class="badge-hoy">HOY</span>` : '';
+      const estadoChip = yaPaso ? '' : `<span class="cita-estado ${esConf?'confirmada':'pendiente'}">${esConf ? '✓ Confirmada' : 'Por confirmar'}</span>`;
+
       return `
-        <div class="cita-card">
-          <div class="cita-fecha">${f.diaSemana} ${f.dia} de ${f.mes}</div>
+        <div class="${claseTarjeta}">
+          <div class="cita-fecha">${f.diaSemana} ${f.dia} de ${f.mes} ${etiquetaHoy}</div>
           <div class="cita-dia">${c.motivo}</div>
           <div class="cita-hora">🕐 ${scHoraAmPm(c.hora)}</div>
-          <span class="cita-estado ${esConf?'confirmada':'pendiente'}">${esConf ? '✓ Confirmada' : 'Por confirmar'}</span>
-          ${accion}
-          <button class="btn-reagendar" onclick="scReagendarCita('${c.id}')">📅 Necesito reagendar</button>
-          <button class="btn-cancelar" onclick="scCancelarCita('${c.id}')">Cancelar cita</button>
+          ${estadoChip}
+          ${acciones}
         </div>`;
     }).join('');
   }
