@@ -83,6 +83,9 @@ img{max-width:100%; display:block}
 .install-banner button.ver{background:rgba(255,255,255,.2); border:1.5px solid rgba(255,255,255,.5); color:#fff; font-weight:700; font-size:.76rem; padding:7px 12px; border-radius:10px; flex-shrink:0}
 .install-banner .cerrar{position:absolute; top:6px; right:8px; background:none; border:none; color:#fff; opacity:.7; font-size:.9rem; padding:4px}
 .link-instalar{display:block; text-align:center; font-size:.78rem; color:var(--gris); margin:4px 0 2px; text-decoration:underline}
+.btn-push{display:block; width:100%; background:linear-gradient(135deg,var(--azul),var(--teal-osc)); color:#fff; border:none; border-radius:14px; padding:13px; font-weight:700; font-size:.9rem; margin:12px 0 4px; box-shadow:var(--sombra); cursor:pointer}
+.btn-push.activo{background:#ecfdf5; color:var(--ok); border:1.5px solid #a7e3ca; box-shadow:none}
+.btn-push:active{transform:scale(.99)}
 
 .pasos-instalar{list-style:none; display:flex; flex-direction:column; gap:10px; margin:14px 0}
 .pasos-instalar li{display:flex; gap:10px; font-size:.87rem; align-items:flex-start}
@@ -402,6 +405,8 @@ img{max-width:100%; display:block}
     <div class="home-title">¿Qué necesitas hoy?</div>
     <div class="streak-row"><span class="streak-pill" id="streakPill">🔥 0 días de racha</span></div>
 
+    <button class="btn-push" id="btnPush" onclick="scActivarNotificaciones()">🔔 Activar recordatorios de citas</button>
+
     <div class="install-banner" id="installBanner" style="display:none">
       <button class="cerrar" onclick="scOcultarBanner()">✕</button>
       <div class="ico">📲</div>
@@ -559,6 +564,7 @@ img{max-width:100%; display:block}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 
 <script>
 /* ============================================================
@@ -576,12 +582,77 @@ const firebaseConfig = {
   appId: "1:601464011103:web:e03150d9b86eb40a451eea"
 };
 let scDB = null, scAuth = null, scFbOK = false, scAuthListo = false;
+let scMessaging = null;
 try {
   firebase.initializeApp(firebaseConfig);
   scDB = firebase.firestore();
   scAuth = firebase.auth();
   scFbOK = true;
+  try { scMessaging = firebase.messaging(); } catch(e){ console.log('messaging no disponible', e); }
 } catch(e) { console.error('Firebase init error', e); }
+
+// ⚠️ VAPID key de Firebase (Configuración → Cloud Messaging → Web Push certificates)
+const SC_VAPID_KEY = "BJbyEqKprY2XnKuxc7RH6Bje2lGH3YbU1mCYtQ5yXmL5vRLAqFRT91nLouRtATu6OJ9LK0LcuIxwMMRzJALbxqA";
+
+// ¿Este navegador soporta notificaciones push?
+function scPushSoportado(){
+  return scMessaging && 'Notification' in window && 'serviceWorker' in navigator;
+}
+
+// Pide permiso, obtiene el token y lo guarda en el documento del paciente
+async function scActivarNotificaciones(){
+  if(!scPushSoportado()){
+    alert('Tu dispositivo o navegador no permite notificaciones. Si usas iPhone, primero instala la app en tu pantalla de inicio.');
+    return false;
+  }
+  if(!scCitasVinculado()){
+    alert('Primero vincula tu teléfono en "Mis citas" para activar las notificaciones.');
+    return false;
+  }
+  try{
+    const permiso = await Notification.requestPermission();
+    if(permiso !== 'granted'){
+      alert('No activaste las notificaciones. Puedes hacerlo después desde el botón de inicio.');
+      return false;
+    }
+    // registrar el service worker de mensajería
+    const reg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+    const token = await scMessaging.getToken({ vapidKey: SC_VAPID_KEY, serviceWorkerRegistration: reg });
+    if(!token){ alert('No se pudo generar el token de notificaciones. Intenta de nuevo.'); return false; }
+    // guardar el token en el documento del paciente
+    const tel = localStorage.getItem('sc_citas_tel');
+    const cod = localStorage.getItem('sc_citas_codigo');
+    if(!scAuthListo) await scIniciarAuth();
+    const llave = await scHashLlave(tel, cod);
+    const doc = await scDB.collection('citas_pacientes').doc(llave).get();
+    const nombre = doc.exists ? (doc.data().nombre||'') : '';
+    // guardamos el token en un array (por si el paciente usa varios dispositivos)
+    let tokens = (doc.exists && doc.data().pushTokens) ? doc.data().pushTokens : [];
+    if(!tokens.includes(token)) tokens.push(token);
+    await scDB.collection('citas_pacientes').doc(llave).set({ nombre: nombre, pushTokens: tokens }, { merge:true });
+    localStorage.setItem('sc_push_activo','1');
+    scActualizarBotonPush();
+    alert('✅ ¡Listo! Ahora recibirás recordatorios de tus citas.');
+    return true;
+  }catch(e){
+    console.error('activar notif error', e);
+    alert('No pudimos activar las notificaciones. Revisa tu conexión e intenta de nuevo.');
+    return false;
+  }
+}
+
+function scActualizarBotonPush(){
+  const b = document.getElementById('btnPush');
+  if(!b) return;
+  const activo = localStorage.getItem('sc_push_activo') === '1' && Notification.permission === 'granted';
+  if(activo){
+    b.innerHTML = '🔔 Notificaciones activadas';
+    b.classList.add('activo');
+  } else {
+    b.innerHTML = '🔔 Activar recordatorios de citas';
+    b.classList.remove('activo');
+  }
+}
 
 async function scIniciarAuth(){
   if(!scFbOK) return;
@@ -1837,6 +1908,17 @@ window.addEventListener('DOMContentLoaded', () => {
   scActualizarBannerInstalar();
   scIniciarAuth(); // login anónimo de Firebase para leer citas
   scRenderCitas(); // actualiza el resumen de citas en el home
+  scActualizarBotonPush(); // estado del botón de notificaciones
+  // notificaciones recibidas mientras la app está abierta
+  if(scMessaging){
+    try{
+      scMessaging.onMessage(function(payload){
+        const t = (payload.notification && payload.notification.title) || 'Mi Sonrisa';
+        const b = (payload.notification && payload.notification.body) || '';
+        alert(`🔔 ${t}\n\n${b}`);
+      });
+    }catch(e){ console.log('onMessage no disponible', e); }
+  }
   if ('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   }

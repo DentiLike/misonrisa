@@ -1,11 +1,12 @@
 // Mi Sonrisa by Dentilike — v18
-const CACHE_NAME = "misonrisa-v39";
+const CACHE_NAME = "misonrisa-v40";
 const ASSETS = [
   "./avatar-patrias.png",
   "./avatar-halloween.png",
   "./avatar-muertos.png",
   "./avatar-anonuevo.png",
   "./avatar-valentin.png",
+  "./firebase-messaging-sw.js",
   "./",
   "./index.html",
   "./manifest.json",
