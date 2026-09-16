@@ -73,11 +73,8 @@ img{max-width:100%; display:block}
 .bocadillo{background:#fff; border:1.5px solid var(--borde); border-radius:16px; padding:12px 16px; margin:14px auto 6px; max-width:340px; font-size:.9rem; color:var(--gris); box-shadow:var(--sombra); position:relative; text-align:center}
 .home-title{text-align:center; font-size:1.3rem; font-weight:700; color:var(--azul-osc); margin:8px 0 4px}
 .link-bienvenida{display:block; text-align:center; font-size:.82rem; color:var(--azul); font-weight:600; margin:2px 0 4px; text-decoration:none}
-.refresh-bar{display:flex; align-items:center; gap:11px; width:100%; background:#fff; border:1.5px solid var(--borde); border-radius:14px; padding:12px 14px; margin:12px 0 4px; cursor:pointer; text-align:left; box-shadow:var(--sombra)}
-.refresh-bar .ref-ico{font-size:1.4rem; flex-shrink:0}
-.refresh-bar .ref-txt{font-size:.8rem; color:var(--gris); line-height:1.35}
-.refresh-bar .ref-txt b{color:var(--azul-osc)}
-.refresh-bar:active{transform:scale(.99)}
+.tb-refresh{background:rgba(255,255,255,.18); border:none; color:#fff; font-size:1rem; width:34px; height:34px; border-radius:9px; cursor:pointer; flex-shrink:0; margin-right:8px; display:flex; align-items:center; justify-content:center}
+.tb-refresh:active{transform:rotate(180deg); transition:transform .3s}
 
 .install-banner{background:linear-gradient(135deg,var(--azul),var(--teal-osc)); color:#fff; border-radius:16px; padding:14px 16px; margin:14px 0; display:flex; align-items:center; gap:12px; box-shadow:var(--sombra); position:relative}
 .install-banner .ico{font-size:1.8rem; flex-shrink:0}
@@ -135,10 +132,19 @@ img{max-width:100%; display:block}
 .agendar-panel .panel-head{color:#fff; font-weight:700; font-size:1.15rem; font-family:'Fredoka',sans-serif; margin-bottom:3px}
 .agendar-panel .panel-sub{color:rgba(255,255,255,.72); font-size:.8rem; margin-bottom:16px}
 .ag-label{display:block; color:var(--teal); font-size:.82rem; font-weight:700; margin:16px 0 8px}
+.ag-cal{background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:14px; padding:12px}
+.cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+.cal-titulo{color:#fff; font-weight:700; font-size:.95rem; font-family:'Fredoka',sans-serif}
+.cal-nav{background:rgba(255,255,255,.18); border:none; color:#fff; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:.8rem}
+.cal-semana{display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:5px}
+.cal-semana span{text-align:center; color:rgba(255,255,255,.55); font-size:.68rem; font-weight:700}
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px}
+.cal-vacio{aspect-ratio:1}
+.cal-dia{aspect-ratio:1; border:none; background:rgba(255,255,255,.14); color:#fff; border-radius:9px; font-size:.85rem; font-weight:600; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center}
+.cal-dia:active{transform:scale(.95)}
+.cal-dia.sel{background:var(--teal); color:#0f172a; font-weight:800}
+.cal-dia.deshab{aspect-ratio:1; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,.22); font-size:.85rem}
 .ag-chips{display:flex; flex-wrap:wrap; gap:8px}
-.ag-chips-scroll{flex-wrap:nowrap; overflow-x:auto; padding-bottom:6px; -webkit-overflow-scrolling:touch}
-.ag-chips-scroll::-webkit-scrollbar{height:4px}
-.ag-chips-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3); border-radius:999px}
 .ag-chip{background:rgba(255,255,255,.12); border:1.5px solid rgba(255,255,255,.25); color:#fff; border-radius:12px; padding:11px 14px; font-size:.85rem; font-weight:600; font-family:inherit; cursor:pointer; white-space:nowrap; transition:all .15s}
 .ag-chip.sel{background:var(--teal); color:#0f172a; border-color:var(--teal); font-weight:700}
 .ag-chip-hora{padding:10px 13px}
@@ -380,6 +386,7 @@ img{max-width:100%; display:block}
       <div class="sub" id="tbSub">by Dentilike</div>
     </div>
   </div>
+  <button class="tb-refresh" onclick="scRefrescarApp()" title="Actualizar" aria-label="Actualizar">🔄</button>
   <img class="logo-dentilike-top" src="logo-dentilike-compact.png" alt="Dentilike" onerror="this.style.display='none'">
 </div>
 
@@ -394,11 +401,6 @@ img{max-width:100%; display:block}
     <a href="#" class="link-bienvenida" onclick="scMostrarBienvenida(); return false;">🎉 ¿Te acaban de colocar los brackets? Toca aquí</a>
     <div class="home-title">¿Qué necesitas hoy?</div>
     <div class="streak-row"><span class="streak-pill" id="streakPill">🔥 0 días de racha</span></div>
-
-    <button class="refresh-bar" onclick="scRefrescarApp()">
-      <span class="ref-ico">🔄</span>
-      <span class="ref-txt"><b>Actualizar app</b> · Tócame de vez en cuando para ver tus citas y avances al día</span>
-    </button>
 
     <div class="install-banner" id="installBanner" style="display:none">
       <button class="cerrar" onclick="scOcultarBanner()">✕</button>
@@ -1099,6 +1101,8 @@ function scHorarioPorDefecto(){
 let scAgFechaSel = '';
 let scAgHoraSel = '';
 let scAgMotivoSel = '';
+let scAgCalMes = new Date().getMonth();   // mes que muestra el calendario
+let scAgCalAnio = new Date().getFullYear();
 
 async function scRenderAgendar(){
   const cont = document.getElementById('agendarContenido');
@@ -1114,12 +1118,12 @@ async function scRenderAgendar(){
   cont.innerHTML = `<div class="agendar-panel"><div class="panel-head">Cargando…</div></div>`;
   const horarios = await scCargarHorarios();
   scAgFechaSel = ''; scAgHoraSel = ''; scAgMotivoSel = '';
+  // calendario arranca en el mes actual
+  scAgCalMes = new Date().getMonth();
+  scAgCalAnio = new Date().getFullYear();
 
-  const fechas = scFechasDisponibles();
   const nombreClinica = horarios && horarios.clinica ? horarios.clinica : 'Dentilike';
   const nombreDoctor = horarios && horarios.doctor ? horarios.doctor : 'Dr. Miguel Alvarado';
-
-  const chipsFecha = fechas.map(f=>`<button class="ag-chip" data-fecha="${f.iso}" onclick="scAgPickFecha('${f.iso}')">${f.label}</button>`).join('');
   const chipsMotivo = AGENDAR_MOTIVOS.map(m=>`<button class="ag-chip" data-motivo="${m}" onclick="scAgPickMotivo('${m.replace(/'/g,"\\'")}')">${m}</button>`).join('');
 
   cont.innerHTML = `
@@ -1127,8 +1131,8 @@ async function scRenderAgendar(){
       <div class="panel-head">Pide tu cita</div>
       <div class="panel-sub">${nombreClinica} · ${nombreDoctor}</div>
 
-      <div class="ag-label">📅 ¿Qué día te gustaría?</div>
-      <div class="ag-chips ag-chips-scroll" id="agChipsFecha">${chipsFecha}</div>
+      <div class="ag-label">📅 Elige el día</div>
+      <div class="ag-cal" id="agCal"></div>
 
       <div class="ag-label">🕐 ¿A qué hora?</div>
       <div class="ag-chips" id="agChipsHora"><div class="ag-hint">Primero elige un día 👆</div></div>
@@ -1139,11 +1143,55 @@ async function scRenderAgendar(){
       <button class="ag-enviar" id="agBtnEnviar" onclick="scEnviarSolicitud()">Enviar solicitud</button>
       <div class="ag-nota">Tu cita no queda agendada hasta que el Dr. Miguel la confirme. Cuando la acepte aparecerá en "Mis citas".</div>
     </div>`;
+  scRenderCalendario();
+}
+
+function scRenderCalendario(){
+  const cal = document.getElementById('agCal');
+  if(!cal) return;
+  const primerDia = new Date(scAgCalAnio, scAgCalMes, 1);
+  const diasEnMes = new Date(scAgCalAnio, scAgCalMes+1, 0).getDate();
+  const padding = primerDia.getDay(); // 0=domingo
+  // fecha mínima = mañana (no permitir hoy ni antes)
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const manana = new Date(hoy); manana.setDate(hoy.getDate()+1);
+
+  const nomMes = SC_MESES[scAgCalMes];
+  let html = `<div class="cal-head">
+      <button class="cal-nav" onclick="scAgCambiarMes(-1)">◀</button>
+      <span class="cal-titulo">${nomMes.charAt(0).toUpperCase()+nomMes.slice(1)} ${scAgCalAnio}</span>
+      <button class="cal-nav" onclick="scAgCambiarMes(1)">▶</button>
+    </div>
+    <div class="cal-semana"><span>D</span><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span></div>
+    <div class="cal-grid">`;
+  for(let i=0;i<padding;i++) html += `<span class="cal-vacio"></span>`;
+  for(let d=1; d<=diasEnMes; d++){
+    const fecha = new Date(scAgCalAnio, scAgCalMes, d);
+    const iso = `${scAgCalAnio}-${String(scAgCalMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const esDomingo = fecha.getDay()===0;
+    const esPasado = fecha < manana;
+    const deshab = esDomingo || esPasado;
+    const sel = (iso === scAgFechaSel) ? ' sel' : '';
+    if(deshab){
+      html += `<span class="cal-dia deshab">${d}</span>`;
+    } else {
+      html += `<button class="cal-dia${sel}" onclick="scAgPickFecha('${iso}')">${d}</button>`;
+    }
+  }
+  html += `</div>`;
+  cal.innerHTML = html;
+}
+
+function scAgCambiarMes(dir){
+  scAgCalMes += dir;
+  if(scAgCalMes < 0){ scAgCalMes = 11; scAgCalAnio--; }
+  if(scAgCalMes > 11){ scAgCalMes = 0; scAgCalAnio++; }
+  scRenderCalendario();
 }
 
 function scAgPickFecha(iso){
   scAgFechaSel = iso; scAgHoraSel = '';
-  document.querySelectorAll('#agChipsFecha .ag-chip').forEach(b=>b.classList.toggle('sel', b.dataset.fecha===iso));
+  scRenderCalendario();
   // generar horas
   const h = scHorariosClinica || scHorarioPorDefecto();
   const manana = scHorasEntre(h.mInicio, h.mFin);
