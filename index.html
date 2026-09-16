@@ -73,6 +73,11 @@ img{max-width:100%; display:block}
 .bocadillo{background:#fff; border:1.5px solid var(--borde); border-radius:16px; padding:12px 16px; margin:14px auto 6px; max-width:340px; font-size:.9rem; color:var(--gris); box-shadow:var(--sombra); position:relative; text-align:center}
 .home-title{text-align:center; font-size:1.3rem; font-weight:700; color:var(--azul-osc); margin:8px 0 4px}
 .link-bienvenida{display:block; text-align:center; font-size:.82rem; color:var(--azul); font-weight:600; margin:2px 0 4px; text-decoration:none}
+.refresh-bar{display:flex; align-items:center; gap:11px; width:100%; background:#fff; border:1.5px solid var(--borde); border-radius:14px; padding:12px 14px; margin:12px 0 4px; cursor:pointer; text-align:left; box-shadow:var(--sombra)}
+.refresh-bar .ref-ico{font-size:1.4rem; flex-shrink:0}
+.refresh-bar .ref-txt{font-size:.8rem; color:var(--gris); line-height:1.35}
+.refresh-bar .ref-txt b{color:var(--azul-osc)}
+.refresh-bar:active{transform:scale(.99)}
 
 .install-banner{background:linear-gradient(135deg,var(--azul),var(--teal-osc)); color:#fff; border-radius:16px; padding:14px 16px; margin:14px 0; display:flex; align-items:center; gap:12px; box-shadow:var(--sombra); position:relative}
 .install-banner .ico{font-size:1.8rem; flex-shrink:0}
@@ -129,11 +134,17 @@ img{max-width:100%; display:block}
 .agendar-panel{background:linear-gradient(160deg, var(--azul), var(--azul-osc)); border-radius:20px; padding:22px; margin-top:4px; box-shadow:0 12px 30px rgba(20,64,110,.28)}
 .agendar-panel .panel-head{color:#fff; font-weight:700; font-size:1.15rem; font-family:'Fredoka',sans-serif; margin-bottom:3px}
 .agendar-panel .panel-sub{color:rgba(255,255,255,.72); font-size:.8rem; margin-bottom:16px}
-.ag-label{display:block; color:var(--teal); font-size:.82rem; font-weight:700; margin:14px 0 5px}
-.ag-select{width:100%; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); border-radius:11px; padding:13px 12px; font-size:.9rem; font-family:inherit; color:#fff; -webkit-appearance:none; appearance:none;}
-.ag-select option, .ag-select optgroup{color:#0f172a; background:#fff}
-.ag-select:focus{outline:none; border-color:var(--teal)}
-.ag-enviar{width:100%; background:var(--teal); color:#0f172a; border:none; border-radius:12px; padding:14px; font-weight:700; font-size:.95rem; margin-top:18px}
+.ag-label{display:block; color:var(--teal); font-size:.82rem; font-weight:700; margin:16px 0 8px}
+.ag-chips{display:flex; flex-wrap:wrap; gap:8px}
+.ag-chips-scroll{flex-wrap:nowrap; overflow-x:auto; padding-bottom:6px; -webkit-overflow-scrolling:touch}
+.ag-chips-scroll::-webkit-scrollbar{height:4px}
+.ag-chips-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3); border-radius:999px}
+.ag-chip{background:rgba(255,255,255,.12); border:1.5px solid rgba(255,255,255,.25); color:#fff; border-radius:12px; padding:11px 14px; font-size:.85rem; font-weight:600; font-family:inherit; cursor:pointer; white-space:nowrap; transition:all .15s}
+.ag-chip.sel{background:var(--teal); color:#0f172a; border-color:var(--teal); font-weight:700}
+.ag-chip-hora{padding:10px 13px}
+.ag-turno{width:100%; color:rgba(255,255,255,.7); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; margin:6px 0 2px}
+.ag-hint{color:rgba(255,255,255,.6); font-size:.82rem; padding:4px 0}
+.ag-enviar{width:100%; background:var(--teal); color:#0f172a; border:none; border-radius:12px; padding:14px; font-weight:700; font-size:.95rem; margin-top:20px}
 .ag-enviar:disabled{opacity:.6}
 .ag-nota{font-size:.74rem; color:rgba(255,255,255,.6); text-align:center; margin-top:12px; line-height:1.45}
 
@@ -383,6 +394,11 @@ img{max-width:100%; display:block}
     <a href="#" class="link-bienvenida" onclick="scMostrarBienvenida(); return false;">🎉 ¿Te acaban de colocar los brackets? Toca aquí</a>
     <div class="home-title">¿Qué necesitas hoy?</div>
     <div class="streak-row"><span class="streak-pill" id="streakPill">🔥 0 días de racha</span></div>
+
+    <button class="refresh-bar" onclick="scRefrescarApp()">
+      <span class="ref-ico">🔄</span>
+      <span class="ref-txt"><b>Actualizar app</b> · Tócame de vez en cuando para ver tus citas y avances al día</span>
+    </button>
 
     <div class="install-banner" id="installBanner" style="display:none">
       <button class="cerrar" onclick="scOcultarBanner()">✕</button>
@@ -1068,18 +1084,24 @@ function scHorasEntre(ini, fin){
 
 async function scCargarHorarios(){
   if(scHorariosClinica) return scHorariosClinica;
-  if(!scFbOK) return null;
+  if(!scFbOK) return scHorarioPorDefecto();
   try{
     if(!scAuthListo) await scIniciarAuth();
     const doc = await scDB.collection('config_publica').doc('horarios').get();
-    scHorariosClinica = doc.exists ? doc.data() : null;
-  }catch(e){ console.error('horarios error', e); scHorariosClinica = null; }
+    scHorariosClinica = doc.exists ? doc.data() : scHorarioPorDefecto();
+  }catch(e){ console.error('horarios error', e); scHorariosClinica = scHorarioPorDefecto(); }
   return scHorariosClinica;
 }
+function scHorarioPorDefecto(){
+  return { clinica:'Dentilike', doctor:'Dr. Miguel Alvarado', mInicio:'09:00', mFin:'14:00', vInicio:'16:00', vFin:'20:00' };
+}
+
+let scAgFechaSel = '';
+let scAgHoraSel = '';
+let scAgMotivoSel = '';
 
 async function scRenderAgendar(){
   const cont = document.getElementById('agendarContenido');
-  // requiere estar vinculado (mismo teléfono+código de Mis Citas)
   if(!scCitasVinculado()){
     cont.innerHTML = `<div class="citas-vincular">
       <div class="ico-big">🔒</div>
@@ -1089,49 +1111,62 @@ async function scRenderAgendar(){
     </div>`;
     return;
   }
-  cont.innerHTML = `<div class="agendar-panel"><div class="panel-head">Cargando horarios…</div></div>`;
+  cont.innerHTML = `<div class="agendar-panel"><div class="panel-head">Cargando…</div></div>`;
   const horarios = await scCargarHorarios();
+  scAgFechaSel = ''; scAgHoraSel = ''; scAgMotivoSel = '';
 
   const fechas = scFechasDisponibles();
-  const optsFecha = `<option value="">Elige una fecha…</option>` + fechas.map(f=>`<option value="${f.iso}">${f.label}</option>`).join('');
-  const optsMotivo = AGENDAR_MOTIVOS.map(m=>`<option value="${m}">${m}</option>`).join('');
-
   const nombreClinica = horarios && horarios.clinica ? horarios.clinica : 'Dentilike';
   const nombreDoctor = horarios && horarios.doctor ? horarios.doctor : 'Dr. Miguel Alvarado';
+
+  const chipsFecha = fechas.map(f=>`<button class="ag-chip" data-fecha="${f.iso}" onclick="scAgPickFecha('${f.iso}')">${f.label}</button>`).join('');
+  const chipsMotivo = AGENDAR_MOTIVOS.map(m=>`<button class="ag-chip" data-motivo="${m}" onclick="scAgPickMotivo('${m.replace(/'/g,"\\'")}')">${m}</button>`).join('');
 
   cont.innerHTML = `
     <div class="agendar-panel">
       <div class="panel-head">Pide tu cita</div>
       <div class="panel-sub">${nombreClinica} · ${nombreDoctor}</div>
 
-      <label class="ag-label">📅 ¿Qué día te gustaría?</label>
-      <select id="agFecha" class="ag-select" onchange="scAgActualizarHoras()">${optsFecha}</select>
+      <div class="ag-label">📅 ¿Qué día te gustaría?</div>
+      <div class="ag-chips ag-chips-scroll" id="agChipsFecha">${chipsFecha}</div>
 
-      <label class="ag-label">🕐 ¿A qué hora?</label>
-      <select id="agHora" class="ag-select"><option value="">Primero elige una fecha</option></select>
+      <div class="ag-label">🕐 ¿A qué hora?</div>
+      <div class="ag-chips" id="agChipsHora"><div class="ag-hint">Primero elige un día 👆</div></div>
 
-      <label class="ag-label">📝 Motivo de tu cita</label>
-      <select id="agMotivo" class="ag-select">${optsMotivo}</select>
+      <div class="ag-label">📝 Motivo de tu cita</div>
+      <div class="ag-chips" id="agChipsMotivo">${chipsMotivo}</div>
 
       <button class="ag-enviar" id="agBtnEnviar" onclick="scEnviarSolicitud()">Enviar solicitud</button>
-      <div class="ag-nota">Tu cita no queda agendada hasta que el Dr. Miguel la confirme. Te avisaremos, y cuando la acepte aparecerá en "Mis citas".</div>
+      <div class="ag-nota">Tu cita no queda agendada hasta que el Dr. Miguel la confirme. Cuando la acepte aparecerá en "Mis citas".</div>
     </div>`;
 }
 
-function scAgActualizarHoras(){
-  const sel = document.getElementById('agHora');
-  const h = scHorariosClinica;
-  if(!h){ sel.innerHTML = `<option value="">Horario no disponible</option>`; return; }
+function scAgPickFecha(iso){
+  scAgFechaSel = iso; scAgHoraSel = '';
+  document.querySelectorAll('#agChipsFecha .ag-chip').forEach(b=>b.classList.toggle('sel', b.dataset.fecha===iso));
+  // generar horas
+  const h = scHorariosClinica || scHorarioPorDefecto();
   const manana = scHorasEntre(h.mInicio, h.mFin);
   const tarde = scHorasEntre(h.vInicio, h.vFin);
-  let html = `<option value="">Elige una hora…</option>`;
+  let html = '';
   if(manana.length){
-    html += `<optgroup label="Mañana">` + manana.map(hr=>`<option value="${hr}">${scHoraAmPm(hr)}</option>`).join('') + `</optgroup>`;
+    html += `<div class="ag-turno">Mañana</div>`;
+    html += manana.map(hr=>`<button class="ag-chip ag-chip-hora" data-hora="${hr}" onclick="scAgPickHora('${hr}')">${scHoraAmPm(hr)}</button>`).join('');
   }
   if(tarde.length){
-    html += `<optgroup label="Tarde">` + tarde.map(hr=>`<option value="${hr}">${scHoraAmPm(hr)}</option>`).join('') + `</optgroup>`;
+    html += `<div class="ag-turno">Tarde</div>`;
+    html += tarde.map(hr=>`<button class="ag-chip ag-chip-hora" data-hora="${hr}" onclick="scAgPickHora('${hr}')">${scHoraAmPm(hr)}</button>`).join('');
   }
-  sel.innerHTML = html;
+  if(!html) html = `<div class="ag-hint">No hay horarios configurados.</div>`;
+  document.getElementById('agChipsHora').innerHTML = html;
+}
+function scAgPickHora(hr){
+  scAgHoraSel = hr;
+  document.querySelectorAll('#agChipsHora .ag-chip-hora').forEach(b=>b.classList.toggle('sel', b.dataset.hora===hr));
+}
+function scAgPickMotivo(m){
+  scAgMotivoSel = m;
+  document.querySelectorAll('#agChipsMotivo .ag-chip').forEach(b=>b.classList.toggle('sel', b.dataset.motivo===m));
 }
 
 // calcula horaFin = horaInicio + 30 min (el doctor la ajusta al aceptar)
@@ -1144,10 +1179,10 @@ function scMasMediaHora(hhmm){
 
 async function scEnviarSolicitud(){
   if(scAgendarEnviando) return;
-  const fecha = document.getElementById('agFecha').value;
-  const horaInicio = document.getElementById('agHora').value;
-  const motivo = document.getElementById('agMotivo').value;
-  if(!fecha){ alert('Elige una fecha para tu cita.'); return; }
+  const fecha = scAgFechaSel;
+  const horaInicio = scAgHoraSel;
+  const motivo = scAgMotivoSel;
+  if(!fecha){ alert('Elige un día para tu cita.'); return; }
   if(!horaInicio){ alert('Elige una hora para tu cita.'); return; }
   if(!motivo){ alert('Elige el motivo de tu cita.'); return; }
 
@@ -1727,6 +1762,22 @@ function scCepilladoRender(){
   document.getElementById('cepDots').innerHTML = CEPILLADO_PASOS.map((_,i) => `<div class="dot ${i===scCepIdx?'active':''}"></div>`).join('');
   document.getElementById('cepBtnPrev').disabled = scCepIdx === 0;
   document.getElementById('cepBtnNext').disabled = scCepIdx === CEPILLADO_PASOS.length - 1;
+}
+
+// Refrescar app: limpia caché del service worker y recarga para traer lo último
+async function scRefrescarApp(){
+  try{
+    // limpiar cachés del service worker
+    if('caches' in window){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+    // limpiar cache de datos en memoria
+    scCitasCache = []; scPlanCache = []; scHorariosClinica = null;
+    scOrtoData = { activa:false, porcentaje:0, faseTexto:'Fase 1: Alineación y nivelación' };
+  }catch(e){ console.error('refresh error', e); }
+  // recargar sin caché
+  location.reload(true);
 }
 
 /* ---------- Init ---------- */
