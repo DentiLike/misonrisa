@@ -125,6 +125,18 @@ img{max-width:100%; display:block}
 /* Mis Citas — estilo degradado moderno */
 .citas-panel{background:linear-gradient(160deg, var(--azul), var(--azul-osc)); border-radius:20px; padding:20px; margin-top:4px; box-shadow:0 12px 30px rgba(20,64,110,.28)}
 
+/* Agendar cita */
+.agendar-panel{background:linear-gradient(160deg, var(--azul), var(--azul-osc)); border-radius:20px; padding:22px; margin-top:4px; box-shadow:0 12px 30px rgba(20,64,110,.28)}
+.agendar-panel .panel-head{color:#fff; font-weight:700; font-size:1.15rem; font-family:'Fredoka',sans-serif; margin-bottom:3px}
+.agendar-panel .panel-sub{color:rgba(255,255,255,.72); font-size:.8rem; margin-bottom:16px}
+.ag-label{display:block; color:var(--teal); font-size:.82rem; font-weight:700; margin:14px 0 5px}
+.ag-select{width:100%; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); border-radius:11px; padding:13px 12px; font-size:.9rem; font-family:inherit; color:#fff; -webkit-appearance:none; appearance:none;}
+.ag-select option, .ag-select optgroup{color:#0f172a; background:#fff}
+.ag-select:focus{outline:none; border-color:var(--teal)}
+.ag-enviar{width:100%; background:var(--teal); color:#0f172a; border:none; border-radius:12px; padding:14px; font-weight:700; font-size:.95rem; margin-top:18px}
+.ag-enviar:disabled{opacity:.6}
+.ag-nota{font-size:.74rem; color:rgba(255,255,255,.6); text-align:center; margin-top:12px; line-height:1.45}
+
 /* Plan de tratamiento (paciente) */
 .plan-panel{background:#fff; border:1.5px solid var(--borde); border-radius:20px; padding:20px; margin-top:16px; box-shadow:var(--sombra)}
 .plan-panel .plan-head{color:var(--azul-osc); font-weight:700; font-size:1.1rem; font-family:'Fredoka',sans-serif; margin-bottom:2px}
@@ -397,10 +409,10 @@ img{max-width:100%; display:block}
         <div class="ico">📆</div>
         <div class="txt"><b>Mis citas</b><span id="homeCitasResumen">Consulta y confirma tus próximas citas</span></div>
       </button>
-      <a class="menu-card" style="border-left-color:var(--oro); text-decoration:none" href="#" onclick="scAgendarCita(); return false;">
+      <button class="menu-card" style="border-left-color:var(--oro)" onclick="scIr('agendar')">
         <div class="ico">📅</div>
-        <div class="txt"><b>Quiero agendar mi cita de control</b><span>Te contactamos por WhatsApp</span></div>
-      </a>
+        <div class="txt"><b>Quiero agendar una cita</b><span>Pide tu cita y el Dr. Miguel la confirma</span></div>
+      </button>
     </div>
 
     <div class="foot-contacto">
@@ -473,6 +485,11 @@ img{max-width:100%; display:block}
   <div class="screen" id="screenCitas">
     <div class="sec-head"><h1>Mis citas</h1><p>Consulta y confirma tus próximas citas con el Dr. Miguel Alvarado.</p></div>
     <div id="citasContenido"></div>
+  </div>
+
+  <div class="screen" id="screenAgendar">
+    <div class="sec-head"><h1>Agendar una cita</h1><p>Pide tu cita y el Dr. Miguel la revisará y confirmará.</p></div>
+    <div id="agendarContenido"></div>
   </div>
 
 </div>
@@ -947,11 +964,12 @@ const scTitulos = {
   urgenciaDetalle:{t:"Urgencias", s:"Qué hacer ahora"},
   guia:{t:"Guía de cuidados", s:"Higiene, dieta, dolor y citas"},
   checklist:{t:"Mi checklist", s:"Tu rutina de hoy"},
-  citas:{t:"Mis citas", s:"Tus próximas citas"}
+  citas:{t:"Mis citas", s:"Tus próximas citas"},
+  agendar:{t:"Agendar cita", s:"Pide tu cita"}
 };
 function scMostrar(nombre){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const map = {home:'screenHome', urgencia:'screenUrgencia', urgenciaDetalle:'screenUrgenciaDetalle', guia:'screenGuia', checklist:'screenChecklist', citas:'screenCitas'};
+  const map = {home:'screenHome', urgencia:'screenUrgencia', urgenciaDetalle:'screenUrgenciaDetalle', guia:'screenGuia', checklist:'screenChecklist', citas:'screenCitas', agendar:'screenAgendar'};
   document.getElementById(map[nombre]).classList.add('active');
   const info = scTitulos[nombre] || scTitulos.home;
   document.getElementById('tbTitulo').textContent = info.t;
@@ -968,6 +986,7 @@ function scIr(nombre){
   if (nombre === 'guia') scRenderGuia();
   if (nombre === 'checklist') scRenderChecklist();
   if (nombre === 'citas') scRenderCitas();
+  if (nombre === 'agendar') scRenderAgendar();
 }
 function scVolver(){
   if (scStack.length > 1) scStack.pop();
@@ -1004,9 +1023,182 @@ function scMostrarBienvenida(){
 function scCerrarBienvenida(){
   document.getElementById('modalBienvenida').classList.remove('show');
 }
-function scAgendarCita(){
-  const texto = encodeURIComponent("Hola Dr. Miguel, quiero agendar mi cita de control.");
-  window.open(`https://wa.me/${CONFIG.telClinica}?text=${texto}`, '_blank');
+/* ============================================================
+   AGENDAR CITA (solicitud → doctor acepta desde DentiAgenda)
+   Escribe en la colección 'solicitudes'. Lee horarios de 'config_publica/horarios'.
+   Contrato de campos definido por DentiAgenda — no cambiar nombres.
+   ============================================================ */
+let scHorariosClinica = null;   // cache de config_publica/horarios
+let scAgendarEnviando = false;
+
+const AGENDAR_MOTIVOS = ['Cita de control', 'Revisión', 'Dolor o molestia', 'Se me cayó un bracket', 'Ajuste', 'Otro'];
+
+// nombres de mes para mostrar bonito
+const SC_MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const SC_DIAS_SEM = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+// genera lista de fechas disponibles (próximos 60 días, sin domingos)
+function scFechasDisponibles(){
+  const lista = [];
+  const hoy = new Date();
+  for(let i=1; i<=60; i++){
+    const d = new Date(hoy);
+    d.setDate(hoy.getDate()+i);
+    if(d.getDay() === 0) continue; // saltar domingos
+    const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const label = `${SC_DIAS_SEM[d.getDay()]} ${d.getDate()} de ${SC_MESES[d.getMonth()]} de ${d.getFullYear()}`;
+    lista.push({ iso, label });
+  }
+  return lista;
+}
+
+// genera horas dentro de un rango "HH:MM"-"HH:MM" cada 30 min
+function scHorasEntre(ini, fin){
+  const horas = [];
+  if(!ini || !fin) return horas;
+  let [h,m] = ini.split(':').map(Number);
+  const [hf,mf] = fin.split(':').map(Number);
+  while(h < hf || (h === hf && m < mf)){
+    horas.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+    m += 30;
+    if(m >= 60){ m -= 60; h += 1; }
+  }
+  return horas;
+}
+
+async function scCargarHorarios(){
+  if(scHorariosClinica) return scHorariosClinica;
+  if(!scFbOK) return null;
+  try{
+    if(!scAuthListo) await scIniciarAuth();
+    const doc = await scDB.collection('config_publica').doc('horarios').get();
+    scHorariosClinica = doc.exists ? doc.data() : null;
+  }catch(e){ console.error('horarios error', e); scHorariosClinica = null; }
+  return scHorariosClinica;
+}
+
+async function scRenderAgendar(){
+  const cont = document.getElementById('agendarContenido');
+  // requiere estar vinculado (mismo teléfono+código de Mis Citas)
+  if(!scCitasVinculado()){
+    cont.innerHTML = `<div class="citas-vincular">
+      <div class="ico-big">🔒</div>
+      <h3>Primero vincula tu teléfono</h3>
+      <p>Para agendar una cita necesitas haber vinculado tu teléfono y código en la sección "Mis citas".</p>
+      <button class="btn-vincular" onclick="scIr('citas')">Ir a Mis citas</button>
+    </div>`;
+    return;
+  }
+  cont.innerHTML = `<div class="agendar-panel"><div class="panel-head">Cargando horarios…</div></div>`;
+  const horarios = await scCargarHorarios();
+
+  const fechas = scFechasDisponibles();
+  const optsFecha = `<option value="">Elige una fecha…</option>` + fechas.map(f=>`<option value="${f.iso}">${f.label}</option>`).join('');
+  const optsMotivo = AGENDAR_MOTIVOS.map(m=>`<option value="${m}">${m}</option>`).join('');
+
+  const nombreClinica = horarios && horarios.clinica ? horarios.clinica : 'Dentilike';
+  const nombreDoctor = horarios && horarios.doctor ? horarios.doctor : 'Dr. Miguel Alvarado';
+
+  cont.innerHTML = `
+    <div class="agendar-panel">
+      <div class="panel-head">Pide tu cita</div>
+      <div class="panel-sub">${nombreClinica} · ${nombreDoctor}</div>
+
+      <label class="ag-label">📅 ¿Qué día te gustaría?</label>
+      <select id="agFecha" class="ag-select" onchange="scAgActualizarHoras()">${optsFecha}</select>
+
+      <label class="ag-label">🕐 ¿A qué hora?</label>
+      <select id="agHora" class="ag-select"><option value="">Primero elige una fecha</option></select>
+
+      <label class="ag-label">📝 Motivo de tu cita</label>
+      <select id="agMotivo" class="ag-select">${optsMotivo}</select>
+
+      <button class="ag-enviar" id="agBtnEnviar" onclick="scEnviarSolicitud()">Enviar solicitud</button>
+      <div class="ag-nota">Tu cita no queda agendada hasta que el Dr. Miguel la confirme. Te avisaremos, y cuando la acepte aparecerá en "Mis citas".</div>
+    </div>`;
+}
+
+function scAgActualizarHoras(){
+  const sel = document.getElementById('agHora');
+  const h = scHorariosClinica;
+  if(!h){ sel.innerHTML = `<option value="">Horario no disponible</option>`; return; }
+  const manana = scHorasEntre(h.mInicio, h.mFin);
+  const tarde = scHorasEntre(h.vInicio, h.vFin);
+  let html = `<option value="">Elige una hora…</option>`;
+  if(manana.length){
+    html += `<optgroup label="Mañana">` + manana.map(hr=>`<option value="${hr}">${scHoraAmPm(hr)}</option>`).join('') + `</optgroup>`;
+  }
+  if(tarde.length){
+    html += `<optgroup label="Tarde">` + tarde.map(hr=>`<option value="${hr}">${scHoraAmPm(hr)}</option>`).join('') + `</optgroup>`;
+  }
+  sel.innerHTML = html;
+}
+
+// calcula horaFin = horaInicio + 30 min (el doctor la ajusta al aceptar)
+function scMasMediaHora(hhmm){
+  let [h,m] = hhmm.split(':').map(Number);
+  m += 30;
+  if(m >= 60){ m -= 60; h += 1; }
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+async function scEnviarSolicitud(){
+  if(scAgendarEnviando) return;
+  const fecha = document.getElementById('agFecha').value;
+  const horaInicio = document.getElementById('agHora').value;
+  const motivo = document.getElementById('agMotivo').value;
+  if(!fecha){ alert('Elige una fecha para tu cita.'); return; }
+  if(!horaInicio){ alert('Elige una hora para tu cita.'); return; }
+  if(!motivo){ alert('Elige el motivo de tu cita.'); return; }
+
+  const tel = localStorage.getItem('sc_citas_tel');
+  const cod = localStorage.getItem('sc_citas_codigo');
+  if(!tel || !cod){ alert('Necesitas vincular tu teléfono primero en Mis citas.'); return; }
+
+  // obtener el nombre del paciente (el mismo que usa en citas_pacientes)
+  let nombre = '';
+  try{
+    if(!scAuthListo) await scIniciarAuth();
+    const llave = await scHashLlave(tel, cod);
+    const doc = await scDB.collection('citas_pacientes').doc(llave).get();
+    nombre = doc.exists ? (doc.data().nombre || '') : '';
+  }catch(e){ console.error('lookup nombre error', e); }
+  if(!nombre) nombre = 'Paciente';
+
+  const btn = document.getElementById('agBtnEnviar');
+  scAgendarEnviando = true;
+  if(btn){ btn.textContent = 'Enviando…'; btn.disabled = true; }
+
+  try{
+    await scDB.collection('solicitudes').add({
+      nombre: nombre,
+      telefono: tel,
+      codigoPaciente: cod,
+      fecha: fecha,
+      horaInicio: horaInicio,
+      horaFin: scMasMediaHora(horaInicio),
+      motivo: motivo,
+      estado: 'pendiente',
+      fechaCreacion: Date.now()
+    });
+    // mostrar confirmación
+    const f = scFechaLegible(fecha);
+    document.getElementById('agendarContenido').innerHTML = `
+      <div class="agendar-panel" style="text-align:center;">
+        <div style="font-size:3rem; margin-bottom:8px;">✅</div>
+        <div class="panel-head">¡Solicitud enviada!</div>
+        <div style="color:rgba(255,255,255,.9); font-size:.9rem; margin:12px 0; line-height:1.5;">
+          Pediste tu cita para el <b>${f.diaSemana} ${f.dia} de ${f.mes}</b> a las <b>${scHoraAmPm(horaInicio)}</b>.<br><br>
+          El Dr. Miguel la revisará y la confirmará. Cuando la acepte, aparecerá en <b>"Mis citas"</b>. Te avisaremos.
+        </div>
+        <button class="btn-vincular" onclick="scIr('citas')">Ver Mis citas</button>
+      </div>`;
+  }catch(e){
+    console.error('enviar solicitud error', e);
+    alert('No pudimos enviar tu solicitud. Revisa tu internet e intenta de nuevo. Si sigue fallando, contáctanos por WhatsApp.');
+    if(btn){ btn.textContent = 'Enviar solicitud'; btn.disabled = false; }
+  }
+  scAgendarEnviando = false;
 }
 
 /* ============================================================
