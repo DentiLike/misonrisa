@@ -337,6 +337,14 @@ img{max-width:100%; display:block}
 
 /* Recomendación de salud en checklist */
 .reco-salud{background:#fff; border:1.5px solid var(--borde); border-left:5px solid var(--teal); border-radius:14px; padding:14px 16px; margin-bottom:16px; box-shadow:var(--sombra); display:flex; gap:12px; align-items:flex-start}
+.solic-panel{background:#fffbeb; border:1.5px solid #fde68a; border-radius:16px; padding:16px; margin-bottom:14px}
+.solic-head{color:#92400e; font-weight:700; font-size:.95rem; margin-bottom:10px; font-family:'Fredoka',sans-serif}
+.solic-item{display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid #fde68a}
+.solic-item:last-of-type{border-bottom:none}
+.solic-ico{font-size:1.3rem; flex-shrink:0}
+.solic-txt b{display:block; color:#92400e; font-size:.88rem}
+.solic-txt span{font-size:.78rem; color:#b45309}
+.solic-nota{font-size:.72rem; color:#b45309; margin-top:8px; line-height:1.4; font-style:italic}
 .reco-salud .reco-ico{font-size:1.6rem; flex-shrink:0}
 .reco-salud .reco-txt b{display:block; color:var(--azul-osc); font-size:.85rem; margin-bottom:3px}
 .reco-salud .reco-txt span{font-size:.82rem; color:var(--gris); line-height:1.5}
@@ -1025,24 +1033,26 @@ function scRenderChecklist(){
 }
 
 const RECOS_SALUD = [
-  { ico:'🪥', t:'Técnica de cepillado', d:'Cepilla en ángulo de 45° hacia la encía, por arriba y por abajo del bracket. Movimientos suaves y circulares.' },
-  { ico:'🥤', t:'Cuida las bebidas', d:'Los refrescos y bebidas azucaradas favorecen manchas blancas alrededor de los brackets. Prefiere agua.' },
-  { ico:'🍎', t:'Alimentos duros', d:'Corta manzanas, zanahorias y pan duro en trozos pequeños. Nunca muerdas directo con los dientes de adelante.' },
-  { ico:'🦷', t:'Cepillo interdental', d:'Es tu mejor aliado: limpia entre bracket y bracket donde el cepillo normal no llega.' },
-  { ico:'⏰', t:'Cepíllate a tiempo', d:'Lo ideal es cepillar dentro de los 30 minutos después de comer, para que la comida no se quede atrapada.' },
-  { ico:'🩹', t:'Cera de ortodoncia', d:'Si un bracket o alambre te roza, seca la zona y coloca un poquito de cera. Trae siempre contigo.' },
-  { ico:'💧', t:'Enjuague natural', d:'Si no puedes cepillarte, al menos enjuágate con agua vigorosamente para arrastrar restos de comida.' },
-  { ico:'😬', t:'No olvides tus citas', d:'Cada ajuste acorta tu tratamiento. Faltar solo lo alarga. ¡No dejes pasar tus controles!' },
-  { ico:'🍬', t:'Cuidado con lo pegajoso', d:'Chicles, caramelos suaves y gomitas pueden despegar brackets. Mejor evítalos durante el tratamiento.' },
-  { ico:'🌙', t:'Cepillado nocturno', d:'El de la noche es el más importante: mientras duermes produces menos saliva y las bacterias trabajan más.' }
+  { ico:'💎', t:'El esmalte dental', d:'Es el tejido más duro de todo tu cuerpo, ¡más que los huesos! Pero a diferencia de ellos, no se regenera. Por eso cuidarlo es tan importante.' },
+  { ico:'🦷', t:'Tus dientes son únicos', d:'Tu huella dental es tan única como tu huella digital. No hay dos personas con la misma dentadura, ni siquiera los gemelos.' },
+  { ico:'👅', t:'Dato curioso', d:'La lengua es el único músculo de tu cuerpo unido por un solo extremo. ¡Y tiene tu propia "huella" única también!' },
+  { ico:'🥤', t:'Tip: cuida el esmalte', d:'Los refrescos y bebidas ácidas debilitan el esmalte. Si tomas alguno, enjuágate con agua después y espera antes de cepillarte.' },
+  { ico:'😀', t:'Sonreír es contagioso', d:'Tu cerebro libera endorfinas al sonreír, y quien te ve tiende a sonreír de vuelta. Tu nueva sonrisa alegrará a muchos.' },
+  { ico:'🍎', t:'Tip con brackets', d:'Corta manzanas y alimentos duros en trozos pequeños. Morder directo con los dientes de adelante puede despegar un bracket.' },
+  { ico:'🦴', t:'Fuerza de mordida', d:'Tus molares pueden ejercer hasta 90 kg de fuerza al masticar. ¡Por eso los brackets van bien sujetos!' },
+  { ico:'⏳', t:'Los dientes cuentan historia', d:'Los arqueólogos determinan la edad y dieta de personas antiguas solo estudiando sus dientes. Son casi indestructibles.' },
+  { ico:'🩹', t:'Tip: cera de ortodoncia', d:'Si un bracket o alambre te roza, seca la zona y coloca un poco de cera. Trae siempre contigo, es tu mejor amiga.' },
+  { ico:'💧', t:'La saliva es increíble', d:'Produces hasta 1.5 litros de saliva al día. Protege tus dientes, ayuda a digerir y combate las bacterias mientras duermes.' },
+  { ico:'😬', t:'Tip: no faltes a tus citas', d:'Cada ajuste acorta tu tratamiento. Faltar solo lo alarga. Tu constancia es la mitad del éxito de tu sonrisa.' },
+  { ico:'🧀', t:'Aliados de tus dientes', d:'El queso, la leche y las verduras verdes fortalecen tu esmalte por su calcio. ¡Buenos snacks durante el tratamiento!' }
 ];
 function scRenderRecoSalud(){
   const cont = document.getElementById('recoSalud');
   if(!cont) return;
-  // rota según el día del año, para que cambie diario
+  // rota según el día, para que cambie diario
   const dia = Math.floor(Date.now()/86400000);
   const r = RECOS_SALUD[dia % RECOS_SALUD.length];
-  cont.innerHTML = `<div class="reco-ico">${r.ico}</div><div class="reco-txt"><b>Recomendación de hoy: ${r.t}</b><span>${r.d}</span></div>`;
+  cont.innerHTML = `<div class="reco-ico">${r.ico}</div><div class="reco-txt"><b>🦷 DentiDato: ${r.t}</b><span>${r.d}</span></div>`;
 }
 
 /* ---------- Navegación ---------- */
@@ -1335,6 +1345,10 @@ async function scEnviarSolicitud(){
       estado: 'pendiente',
       fechaCreacion: Date.now()
     });
+    // guardar marca local de solicitud pendiente (para mostrar estado al paciente)
+    const pendientes = JSON.parse(localStorage.getItem('sc_solicitudes_pend')||'[]');
+    pendientes.push({ fecha, hora:horaInicio, motivo, enviada:Date.now() });
+    localStorage.setItem('sc_solicitudes_pend', JSON.stringify(pendientes));
     // mostrar confirmación
     const f = scFechaLegible(fecha);
     document.getElementById('agendarContenido').innerHTML = `
@@ -1643,6 +1657,7 @@ async function scRenderCitas(){
     }).join('');
   }
   document.getElementById('citasContenido').innerHTML = `
+    ${scRenderSolicitudesPendientes(citas)}
     <div class="citas-panel">
       <div class="panel-head">Tus próximas citas</div>
       <div class="panel-sub">Con el Dr. Miguel Alvarado · Dentilike</div>
@@ -1653,6 +1668,36 @@ async function scRenderCitas(){
     ${scRenderPlanTratamiento()}`;
 
   scActualizarAvisoProximaCita();
+}
+
+// Muestra solicitudes pendientes; si la cita ya existe en las citas reales, la quita (fue aceptada)
+function scRenderSolicitudesPendientes(citasReales){
+  let pendientes = JSON.parse(localStorage.getItem('sc_solicitudes_pend')||'[]');
+  if(!pendientes.length) return '';
+  // limpiar las que ya aparecen en citas reales (aceptadas) o muy viejas (>30 días)
+  const ahora = Date.now();
+  pendientes = pendientes.filter(p=>{
+    const yaEsCita = (citasReales||[]).some(c => c.fechaISO === p.fecha && (c.hora===p.hora || true));
+    const vieja = (ahora - (p.enviada||0)) > 30*86400000;
+    return !yaEsCita && !vieja;
+  });
+  localStorage.setItem('sc_solicitudes_pend', JSON.stringify(pendientes));
+  if(!pendientes.length) return '';
+  const items = pendientes.map(p=>{
+    const f = scFechaLegible(p.fecha);
+    return `<div class="solic-item">
+      <div class="solic-ico">⏳</div>
+      <div class="solic-txt">
+        <b>${f.diaSemana} ${f.dia} de ${f.mes} · ${scHoraAmPm(p.hora)}</b>
+        <span>${p.motivo} — Esperando confirmación del Dr. Miguel</span>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="solic-panel">
+    <div class="solic-head">📨 Solicitudes pendientes</div>
+    ${items}
+    <div class="solic-nota">Cuando el Dr. Miguel acepte tu solicitud, tu cita aparecerá abajo en "Tus próximas citas".</div>
+  </div>`;
 }
 
 // Traduce número FDI a nombre entendible para el paciente
