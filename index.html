@@ -120,6 +120,11 @@ img{max-width:100%; display:block}
 
 .menu-cards{display:flex; flex-direction:column; gap:12px; margin-top:8px}
 .menu-card{background:#fff; border-radius:16px; padding:16px; box-shadow:var(--sombra); border:1.5px solid var(--borde); display:flex; align-items:center; gap:14px; text-align:left; border-left:5px solid var(--azul)}
+.menu-card.destacada{padding:20px 16px; box-shadow:0 8px 22px rgba(20,64,110,.15)}
+.menu-card.destacada .ico{font-size:2rem}
+.menu-card.destacada .txt b{font-size:1.08rem}
+.wa-flotante{position:fixed; right:16px; bottom:76px; width:54px; height:54px; border-radius:50%; background:#25D366; display:flex; align-items:center; justify-content:center; font-size:1.7rem; box-shadow:0 6px 18px rgba(0,0,0,.28); z-index:40; cursor:pointer; text-decoration:none; border:none}
+.wa-flotante:active{transform:scale(.94)}
 .menu-card.urg{border-left-color:var(--rojo)}
 .menu-card.chk{border-left-color:var(--teal-osc)}
 .menu-card.citas{border-left-color:var(--azul)}
@@ -129,6 +134,8 @@ img{max-width:100%; display:block}
 
 /* Mis Citas — estilo degradado moderno */
 .citas-panel{background:linear-gradient(160deg, var(--azul), var(--azul-osc)); border-radius:20px; padding:20px; margin-top:4px; box-shadow:0 12px 30px rgba(20,64,110,.28)}
+.btn-agendar-citas{display:block; width:100%; background:var(--oro); color:#3d2f00; border:none; border-radius:14px; padding:14px; font-weight:700; font-size:.95rem; margin-bottom:14px; box-shadow:var(--sombra); cursor:pointer}
+.btn-agendar-citas:active{transform:scale(.99)}
 
 /* Agendar cita */
 .agendar-panel{background:linear-gradient(160deg, var(--azul), var(--azul-osc)); border-radius:20px; padding:22px; margin-top:4px; box-shadow:0 12px 30px rgba(20,64,110,.28)}
@@ -336,7 +343,22 @@ img{max-width:100%; display:block}
 .elasticos-msg.show{display:block}
 
 /* Recomendación de salud en checklist */
-.reco-salud{background:#fff; border:1.5px solid var(--borde); border-left:5px solid var(--teal); border-radius:14px; padding:14px 16px; margin-bottom:16px; box-shadow:var(--sombra); display:flex; gap:12px; align-items:flex-start}
+.dd-avatar-wrap{text-align:center; margin-bottom:14px}
+.dd-avatar-wrap img{width:90px; height:90px; border-radius:50%; object-fit:cover; border:3px solid var(--teal); background:#fff}
+.dd-destacado{background:linear-gradient(160deg,var(--azul),var(--azul-osc)); border-radius:20px; padding:22px 18px; text-align:center; box-shadow:0 12px 30px rgba(20,64,110,.25); margin-bottom:18px}
+.dd-badge{display:inline-block; background:var(--teal); color:#0f172a; font-size:.7rem; font-weight:800; padding:4px 12px; border-radius:999px; margin-bottom:12px}
+.dd-ico-grande{font-size:3rem; margin-bottom:8px}
+.dd-titulo{color:#fff; font-weight:700; font-size:1.15rem; font-family:'Fredoka',sans-serif; margin-bottom:8px}
+.dd-texto{color:rgba(255,255,255,.9); font-size:.9rem; line-height:1.5}
+.dd-nav{display:flex; gap:10px; margin-top:16px}
+.dd-btn{flex:1; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:.88rem; cursor:pointer}
+.dd-btn.prev{background:#fff; color:var(--azul-osc); border:1.5px solid var(--borde)}
+.dd-btn.next{background:var(--azul); color:#fff}
+.dd-sub{color:var(--azul-osc); font-weight:700; font-size:.95rem; margin:4px 0 12px; font-family:'Fredoka',sans-serif}
+.dd-item{display:flex; gap:12px; align-items:flex-start; background:#fff; border:1.5px solid var(--borde); border-radius:14px; padding:14px; margin-bottom:10px; box-shadow:var(--sombra)}
+.dd-item-ico{font-size:1.7rem; flex-shrink:0}
+.dd-item-txt b{display:block; color:var(--azul-osc); font-size:.9rem; margin-bottom:3px}
+.dd-item-txt span{font-size:.83rem; color:var(--gris); line-height:1.5}
 .solic-panel{background:#fffbeb; border:1.5px solid #fde68a; border-radius:16px; padding:16px; margin-bottom:14px}
 .solic-head{color:#92400e; font-weight:700; font-size:.95rem; margin-bottom:10px; font-family:'Fredoka',sans-serif}
 .solic-item{display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid #fde68a}
@@ -424,6 +446,14 @@ img{max-width:100%; display:block}
     <a href="#" class="link-instalar" id="linkComoInstalar" onclick="scMostrarInstalar(); return false;">📲 ¿Cómo instalar esta app en mi celular?</a>
 
     <div class="menu-cards" style="margin-top:16px">
+      <button class="menu-card citas destacada" onclick="scIr('citas')">
+        <div class="ico">📆</div>
+        <div class="txt"><b>Mis citas</b><span id="homeCitasResumen">Consulta y confirma tus próximas citas</span></div>
+      </button>
+      <button class="menu-card destacada" style="border-left-color:var(--oro)" onclick="scIr('agendar')">
+        <div class="ico">📅</div>
+        <div class="txt"><b>Quiero agendar una cita</b><span>Pide tu cita y el Dr. Miguel la confirma</span></div>
+      </button>
       <button class="menu-card urg" onclick="scIr('urgencia')">
         <div class="ico">🚨</div>
         <div class="txt"><b>Tengo una urgencia</b><span>Bracket despegado, alambre pica, dolor, etc.</span></div>
@@ -432,17 +462,9 @@ img{max-width:100%; display:block}
         <div class="ico">📖</div>
         <div class="txt"><b>Guía de cuidados</b><span>Higiene, alimentación, dolor y citas</span></div>
       </button>
-      <button class="menu-card chk" onclick="scIr('checklist')">
-        <div class="ico">✅</div>
-        <div class="txt"><b>Mi checklist de hoy</b><span id="homeChkResumen">Marca tus tareas del día</span></div>
-      </button>
-      <button class="menu-card citas" onclick="scIr('citas')">
-        <div class="ico">📆</div>
-        <div class="txt"><b>Mis citas</b><span id="homeCitasResumen">Consulta y confirma tus próximas citas</span></div>
-      </button>
-      <button class="menu-card" style="border-left-color:var(--oro)" onclick="scIr('agendar')">
-        <div class="ico">📅</div>
-        <div class="txt"><b>Quiero agendar una cita</b><span>Pide tu cita y el Dr. Miguel la confirma</span></div>
+      <button class="menu-card chk" onclick="scIr('dentidatos')">
+        <div class="ico">💡</div>
+        <div class="txt"><b>DentiDatos</b><span>Datos curiosos y consejos para tu sonrisa</span></div>
       </button>
     </div>
 
@@ -480,36 +502,12 @@ img{max-width:100%; display:block}
   </div>
 
   <!-- CHECKLIST -->
-  <div class="screen" id="screenChecklist">
-    <div class="sec-head"><h1>Mi checklist de hoy</h1><p id="fechaHoyTxt"></p></div>
-    <div class="chk-avatar-wrap">
-      <img id="chkAvatarImg" src="avatar-dr.png" alt="Mikes Molares" onerror="this.style.display='none'">
-      <div class="chk-avatar-msg" id="chkAvatarMsg">¡Vamos, tú puedes con todo hoy!</div>
+  <div class="screen" id="screenDentidatos">
+    <div class="sec-head"><h1>DentiDatos</h1><p>Datos curiosos y consejos para cuidar tu sonrisa</p></div>
+    <div class="dd-avatar-wrap">
+      <img src="avatar-dr.png" alt="Mikes Molares" onerror="this.style.display='none'">
     </div>
-
-    <div class="chk-settings">
-      <span>Uso elásticos (ligas)</span>
-      <label class="switch"><input type="checkbox" id="toggleElasticos" onchange="scToggleElasticos()"><span class="sl"></span></label>
-    </div>
-
-    <div class="empaque-card" id="empaqueCard">
-      <label>🖼️ Animal o ciudad del empaque</label>
-      <div class="ayuda">Nos ayuda a identificar el calibre y grosor exactos de tus elásticos (ej. "Kanguro — mediano, 4.5 oz, 3/16").</div>
-      <input type="text" id="inputEmpaque" placeholder="Ej. Kanguro, Canguro, Guadalajara..." oninput="scGuardarEmpaque()">
-    </div>
-
-    <div class="elasticos-msg" id="elasticosMsg"></div>
-
-    <div class="progreso-wrap">
-      <div class="progreso-txt"><span>Progreso de hoy</span><span id="progresoNum">0/0</span></div>
-      <div class="progreso-bar"><div class="progreso-fill" id="progresoFill" style="width:0%"></div></div>
-    </div>
-
-    <div class="chk-list" id="chkList"></div>
-
-    <div class="reco-salud" id="recoSalud"></div>
-
-    <div class="streak-row" style="margin-bottom:18px"><span class="streak-pill" id="streakPill2">🔥 0 días de racha</span></div>
+    <div id="dentidatosLista"></div>
   </div>
 
   <!-- MIS CITAS -->
@@ -525,12 +523,14 @@ img{max-width:100%; display:block}
 
 </div>
 
+<a class="wa-flotante" id="waFlotante" href="#" onclick="scWhatsAppClinica(); return false;" title="Contactar por WhatsApp">💬</a>
+
 <div class="bottomnav">
   <button class="nav-btn active" data-nav="home" onclick="scIr('home')"><span class="ic">🏠</span>Inicio</button>
   <button class="nav-btn" data-nav="guia" onclick="scIr('guia')"><span class="ic">📖</span>Guía</button>
   <button class="nav-btn" data-nav="urgencia" onclick="scIr('urgencia')"><span class="ic">🚨</span>Urgencia</button>
   <button class="nav-btn" data-nav="citas" onclick="scIr('citas')"><span class="ic">📆</span>Citas</button>
-  <button class="nav-btn" data-nav="checklist" onclick="scIr('checklist')"><span class="ic">✅</span>Checklist</button>
+  <button class="nav-btn" data-nav="dentidatos" onclick="scIr('dentidatos')"><span class="ic">💡</span>DentiDatos</button>
 </div>
 
 <div class="modal-overlay" id="modalBienvenida">
@@ -681,6 +681,10 @@ const CONFIG = {
   telClinica: "524446036659",
   nombreClinica: "Dr. Miguel Alvarado · Dentilike"
 };
+function scWhatsAppClinica(){
+  const msg = encodeURIComponent("Hola, escribo desde la app Mi Sonrisa. Necesito ayuda con:");
+  window.open(`https://wa.me/${CONFIG.telClinica}?text=${msg}`, '_blank');
+}
 
 /* ============================================================
    AVATARES FESTIVOS
@@ -922,116 +926,7 @@ const GUIA = {
   ]}
 };
 
-/* ---------- Checklist ---------- */
-function scChecklistItems(){
-  const base = [
-    { id:"des", label:"Cepillado después del desayuno" },
-    { id:"com", label:"Cepillado después de la comida" },
-    { id:"cen", label:"Cepillado después de la cena" },
-    { id:"hilo", label:"Hilo dental o Superfloss (1 vez al día)" },
-    { id:"interdental", label:"Cepillo interdental entre brackets" }
-  ];
-  if (scGetElasticos()){
-    base.splice(5, 0,
-      { id:"elas_manana", label:"Elásticos — mañana" },
-      { id:"elas_tarde", label:"Elásticos — tarde" },
-      { id:"elas_noche", label:"Elásticos — noche" }
-    );
-  }
-  return base;
-}
-function scGetEmpaque(){ return localStorage.getItem('sc_elastico_empaque') || ''; }
-function scGuardarEmpaque(){
-  const v = document.getElementById('inputEmpaque').value;
-  localStorage.setItem('sc_elastico_empaque', v);
-}
-function scGetElasticos(){ return localStorage.getItem('sc_elasticos') === '1'; }
-function scToggleElasticos(){
-  const v = document.getElementById('toggleElasticos').checked;
-  localStorage.setItem('sc_elasticos', v ? '1':'0');
-  document.getElementById('empaqueCard').classList.toggle('show', v);
-  scRenderChecklist();
-}
-function scGetEstadoHoy(){
-  const hoy = scHoyISO();
-  let raw = localStorage.getItem('sc_chk_estado');
-  let data = raw ? JSON.parse(raw) : {fecha:hoy, marcados:{}};
-  if (data.fecha !== hoy){
-    scCerrarDiaAnterior(data);
-    data = {fecha:hoy, marcados:{}};
-  }
-  return data;
-}
-function scGuardarEstado(data){ localStorage.setItem('sc_chk_estado', JSON.stringify(data)); }
-function scCerrarDiaAnterior(dataAnterior){
-  const items = scChecklistItems();
-  const totalPrev = Object.keys(dataAnterior.marcados||{}).length ? Object.values(dataAnterior.marcados).filter(Boolean).length : 0;
-  const totalPosible = items.length;
-  let racha = parseInt(localStorage.getItem('sc_racha')||"0",10);
-  if (totalPrev > 0 && totalPosible > 0 && totalPrev >= totalPosible){
-    racha += 1;
-  } else if (dataAnterior.fecha) {
-    racha = 0;
-  }
-  localStorage.setItem('sc_racha', String(racha));
-}
-function scToggleItem(id){
-  const data = scGetEstadoHoy();
-  data.marcados[id] = !data.marcados[id];
-  scGuardarEstado(data);
-  scRenderChecklist();
-}
-function scRenderChecklist(){
-  document.getElementById('toggleElasticos').checked = scGetElasticos();
-  document.getElementById('empaqueCard').classList.toggle('show', scGetElasticos());
-  document.getElementById('inputEmpaque').value = scGetEmpaque();
-  document.getElementById('fechaHoyTxt').textContent = new Date().toLocaleDateString('es-MX',{weekday:'long', day:'numeric', month:'long'});
-  const items = scChecklistItems();
-  const data = scGetEstadoHoy();
-  const list = document.getElementById('chkList');
-  list.innerHTML = items.map(it => {
-    const on = !!data.marcados[it.id];
-    return `<button class="chk-item ${on?'done':''}" onclick="scToggleItem('${it.id}')">
-      <div class="chk-box">${on?'✓':''}</div><span>${it.label}</span>
-    </button>`;
-  }).join('');
-  const done = items.filter(it => data.marcados[it.id]).length;
-  const total = items.length;
-  document.getElementById('progresoNum').textContent = `${done}/${total}`;
-  document.getElementById('progresoFill').style.width = total ? `${Math.round(done/total*100)}%` : '0%';
-
-  const elasticosMsgEl = document.getElementById('elasticosMsg');
-  if (scGetElasticos()){
-    const elasDone = ['elas_manana','elas_tarde','elas_noche'].filter(id => data.marcados[id]).length;
-    let msg = '';
-    if (elasDone === 3) msg = '🌟 ¡Elásticos completos hoy! Así se corrige tu mordida más rápido, sigue así.';
-    else if (elasDone === 0) msg = '💪 No olvides tus elásticos hoy — cada toma cuenta para tu tratamiento.';
-    else msg = `👍 Vas ${elasDone}/3 con tus elásticos hoy — ¡tú puedes con las que faltan!`;
-    elasticosMsgEl.textContent = msg;
-    elasticosMsgEl.classList.add('show');
-  } else {
-    elasticosMsgEl.classList.remove('show');
-  }
-
-  const chkImg = document.getElementById('chkAvatarImg');
-  const chkMsg = document.getElementById('chkAvatarMsg');
-  if (total > 0 && done === total){
-    chkImg.src = 'avatar-dr.png';
-    chkMsg.textContent = '¡Completaste todo hoy! Así se cuida un tratamiento 🎉';
-  } else if (done === 0){
-    chkImg.src = 'avatar-dr.png';
-    chkMsg.textContent = '¡Vamos, tú puedes con todo hoy!';
-  } else {
-    chkImg.src = 'avatar-dr.png';
-    chkMsg.textContent = `Vas ${done}/${total} — sigue así.`;
-  }
-
-  const racha = parseInt(localStorage.getItem('sc_racha')||"0",10);
-  document.getElementById('streakPill').textContent = `🔥 ${racha} día${racha===1?'':'s'} de racha`;  document.getElementById('streakPill2').textContent = `🔥 ${racha} día${racha===1?'':'s'} de racha`;
-  document.getElementById('homeChkResumen').textContent = total ? `Hoy: ${done}/${total} completado` : 'Marca tus tareas del día';
-  scRenderRecoSalud();
-}
-
+/* ---------- DentiDatos ---------- */
 const RECOS_SALUD = [
   { ico:'💎', t:'El esmalte dental', d:'Es el tejido más duro de todo tu cuerpo, ¡más que los huesos! Pero a diferencia de ellos, no se regenera. Por eso cuidarlo es tan importante.' },
   { ico:'🦷', t:'Tus dientes son únicos', d:'Tu huella dental es tan única como tu huella digital. No hay dos personas con la misma dentadura, ni siquiera los gemelos.' },
@@ -1046,14 +941,37 @@ const RECOS_SALUD = [
   { ico:'😬', t:'Tip: no faltes a tus citas', d:'Cada ajuste acorta tu tratamiento. Faltar solo lo alarga. Tu constancia es la mitad del éxito de tu sonrisa.' },
   { ico:'🧀', t:'Aliados de tus dientes', d:'El queso, la leche y las verduras verdes fortalecen tu esmalte por su calcio. ¡Buenos snacks durante el tratamiento!' }
 ];
-function scRenderRecoSalud(){
-  const cont = document.getElementById('recoSalud');
+let scDdIdx = 0;
+function scRenderDentidatos(){
+  const cont = document.getElementById('dentidatosLista');
   if(!cont) return;
-  // rota según el día, para que cambie diario
   const dia = Math.floor(Date.now()/86400000);
-  const r = RECOS_SALUD[dia % RECOS_SALUD.length];
-  cont.innerHTML = `<div class="reco-ico">${r.ico}</div><div class="reco-txt"><b>🦷 DentiDato: ${r.t}</b><span>${r.d}</span></div>`;
+  scDdIdx = dia % RECOS_SALUD.length; // arranca en el dato de hoy
+  scDdMostrar();
 }
+function scDdMostrar(){
+  const cont = document.getElementById('dentidatosLista');
+  if(!cont) return;
+  const r = RECOS_SALUD[scDdIdx];
+  const total = RECOS_SALUD.length;
+  cont.innerHTML = `
+    <div class="dd-destacado">
+      <div class="dd-badge">💡 DentiDato ${scDdIdx+1} de ${total}</div>
+      <div class="dd-ico-grande">${r.ico}</div>
+      <div class="dd-titulo">${r.t}</div>
+      <div class="dd-texto">${r.d}</div>
+    </div>
+    <div class="dd-nav">
+      <button class="dd-btn prev" onclick="scDdNav(-1)">← Anterior</button>
+      <button class="dd-btn next" onclick="scDdNav(1)">Siguiente →</button>
+    </div>`;
+}
+function scDdNav(dir){
+  const total = RECOS_SALUD.length;
+  scDdIdx = (scDdIdx + dir + total) % total;
+  scDdMostrar();
+}
+
 
 /* ---------- Navegación ---------- */
 let scStack = ['home'];
@@ -1062,13 +980,13 @@ const scTitulos = {
   urgencia:{t:"Urgencias", s:"¿Qué te está pasando?"},
   urgenciaDetalle:{t:"Urgencias", s:"Qué hacer ahora"},
   guia:{t:"Guía de cuidados", s:"Higiene, dieta, dolor y citas"},
-  checklist:{t:"Mi checklist", s:"Tu rutina de hoy"},
+  dentidatos:{t:"DentiDatos", s:"Datos y consejos para tu sonrisa"},
   citas:{t:"Mis citas", s:"Tus próximas citas"},
   agendar:{t:"Agendar cita", s:"Pide tu cita"}
 };
 function scMostrar(nombre){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const map = {home:'screenHome', urgencia:'screenUrgencia', urgenciaDetalle:'screenUrgenciaDetalle', guia:'screenGuia', checklist:'screenChecklist', citas:'screenCitas', agendar:'screenAgendar'};
+  const map = {home:'screenHome', urgencia:'screenUrgencia', urgenciaDetalle:'screenUrgenciaDetalle', guia:'screenGuia', dentidatos:'screenDentidatos', citas:'screenCitas', agendar:'screenAgendar'};
   document.getElementById(map[nombre]).classList.add('active');
   const info = scTitulos[nombre] || scTitulos.home;
   document.getElementById('tbTitulo').textContent = info.t;
@@ -1083,7 +1001,7 @@ function scIr(nombre){
   scMostrar(nombre);
   if (nombre === 'urgencia') scRenderUrgList();
   if (nombre === 'guia') scRenderGuia();
-  if (nombre === 'checklist') scRenderChecklist();
+  if (nombre === 'dentidatos') scRenderDentidatos();
   if (nombre === 'citas') scRenderCitas();
   if (nombre === 'agendar') scRenderAgendar();
 }
@@ -1574,14 +1492,15 @@ async function scRenderCitas(){
     if (resumenHome) resumenHome.textContent = 'Vincula tu teléfono para ver tus citas';
     cont.innerHTML = `
       <div class="citas-vincular">
-        <div class="ico-big">🔒</div>
-        <h3>Vincula tus citas</h3>
-        <p>Para ver tus citas de forma segura, escribe tu teléfono y el código que te dio el Dr. Miguel en tu consulta.</p>
+        <div class="ico-big">👋</div>
+        <h3>¡Bienvenido a Mi Sonrisa!</h3>
+        <p>Aquí verás tus citas, tu plan de tratamiento y el avance de tu ortodoncia. Para empezar, vincula tu teléfono con el código que te dio el Dr. Miguel en tu consulta.</p>
         <label>Tu teléfono (10 dígitos)</label>
         <input type="tel" id="inputCitasTel" placeholder="Ej. 444 123 4567" inputmode="numeric">
         <label>Código de acceso</label>
         <input type="text" id="inputCitasCodigo" placeholder="El que te dieron en consulta">
         <button class="btn-vincular" onclick="scVincularCitas()">Ver mis citas</button>
+        <div style="margin-top:14px; font-size:.78rem; color:rgba(255,255,255,.65);">¿No tienes tu código? Escríbenos por WhatsApp con el botón 💬</div>
       </div>`;
     return;
   }
@@ -1657,6 +1576,7 @@ async function scRenderCitas(){
     }).join('');
   }
   document.getElementById('citasContenido').innerHTML = `
+    <button class="btn-agendar-citas" onclick="scIr('agendar')">➕ Agendar una cita nueva</button>
     ${scRenderSolicitudesPendientes(citas)}
     <div class="citas-panel">
       <div class="panel-head">Tus próximas citas</div>
@@ -1946,10 +1866,8 @@ async function scRefrescarApp(){
 
 /* ---------- Init ---------- */
 window.addEventListener('DOMContentLoaded', () => {
-  scGetEstadoHoy(); // dispara cierre de día anterior si aplica
   scAplicarFestividad(); // avatar y saludo festivo si aplica
   scActualizarAvisoProximaCita(); // saludo (con festividad si hay)
-  scRenderChecklist();
   scActualizarBannerInstalar();
   scIniciarAuth(); // login anónimo de Firebase para leer citas
   scRenderCitas(); // actualiza el resumen de citas en el home
