@@ -54,9 +54,14 @@ img{max-width:100%; display:block}
 .topbar .logo-dentilike-top{height:23px; width:auto; flex-shrink:0; object-fit:contain; background:#fff; border-radius:6px; padding:4px 8px}
 
 /* Screens */
-.screen{display:none; animation:fadeIn .25s ease}
+.screen{display:none; animation:fadeIn .32s cubic-bezier(.22,.61,.36,1)}
+@keyframes fadeIn{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)}}
+/* Transiciones suaves globales */
+.menu-card, .btn-vincular, .btn-confirmar, .btn-reagendar, .btn-cancelar, .ag-enviar, .dd-btn, .btn-agendar-citas, .btn-push, .cta, .nav-btn{transition:transform .15s ease, box-shadow .2s ease, background .2s ease, opacity .2s ease}
+.menu-card:active, .btn-vincular:active, .btn-confirmar:active, .ag-enviar:active, .dd-btn:active, .btn-agendar-citas:active, .cta:active{transform:scale(.97)}
+.nav-btn:active{transform:scale(.9)}
+.wa-flotante{transition:transform .2s ease, box-shadow .2s ease}
 .screen.active{display:block}
-@keyframes fadeIn{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)}}
 
 /* Home */
 .avatar-box{text-align:center; padding:22px 0 6px}
@@ -75,6 +80,9 @@ img{max-width:100%; display:block}
 .link-bienvenida{display:block; text-align:center; font-size:.82rem; color:var(--azul); font-weight:600; margin:2px 0 4px; text-decoration:none}
 .tb-refresh{background:rgba(255,255,255,.18); border:none; color:#fff; font-size:1rem; width:34px; height:34px; border-radius:9px; cursor:pointer; flex-shrink:0; margin-right:8px; display:flex; align-items:center; justify-content:center}
 .tb-refresh:active{transform:rotate(180deg); transition:transform .3s}
+.tb-sync{width:11px; height:11px; border-radius:50%; background:var(--gris-cl); flex-shrink:0; margin-right:8px; transition:background .3s}
+.tb-sync.ok{background:#22c55e; box-shadow:0 0 6px rgba(34,197,94,.6)}
+.tb-sync.err{background:#ef4444; box-shadow:0 0 6px rgba(239,68,68,.6)}
 
 .install-banner{background:linear-gradient(135deg,var(--azul),var(--teal-osc)); color:#fff; border-radius:16px; padding:14px 16px; margin:14px 0; display:flex; align-items:center; gap:12px; box-shadow:var(--sombra); position:relative}
 .install-banner .ico{font-size:1.8rem; flex-shrink:0}
@@ -349,7 +357,7 @@ img{max-width:100%; display:block}
 .dd-badge{display:inline-block; background:var(--teal); color:#0f172a; font-size:.7rem; font-weight:800; padding:4px 12px; border-radius:999px; margin-bottom:12px}
 .dd-ico-grande{font-size:3rem; margin-bottom:8px}
 .dd-titulo{color:#fff; font-weight:700; font-size:1.15rem; font-family:'Fredoka',sans-serif; margin-bottom:8px}
-.dd-texto{color:rgba(255,255,255,.9); font-size:.9rem; line-height:1.5}
+.dd-texto{color:rgba(255,255,255,.92); font-size:.92rem; line-height:1.65; text-align:left}
 .dd-nav{display:flex; gap:10px; margin-top:16px}
 .dd-btn{flex:1; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:.88rem; cursor:pointer}
 .dd-btn.prev{background:#fff; color:var(--azul-osc); border:1.5px solid var(--borde)}
@@ -420,6 +428,7 @@ img{max-width:100%; display:block}
     </div>
   </div>
   <button class="tb-refresh" onclick="scRefrescarApp()" title="Actualizar" aria-label="Actualizar">🔄</button>
+  <span class="tb-sync" id="tbSync" title="Estado de conexión"></span>
   <img class="logo-dentilike-top" src="logo-dentilike-compact.png" alt="Dentilike" onerror="this.style.display='none'">
 </div>
 
@@ -663,9 +672,15 @@ function scActualizarBotonPush(){
 }
 
 async function scIniciarAuth(){
-  if(!scFbOK) return;
-  try { await scAuth.signInAnonymously(); scAuthListo = true; }
-  catch(e){ console.error('auth error', e); }
+  if(!scFbOK){ scSetSync(false); return; }
+  try { await scAuth.signInAnonymously(); scAuthListo = true; scSetSync(true); }
+  catch(e){ console.error('auth error', e); scSetSync(false); }
+}
+function scSetSync(ok){
+  const s = document.getElementById('tbSync');
+  if(!s) return;
+  s.className = 'tb-sync ' + (ok ? 'ok' : 'err');
+  s.title = ok ? 'Sincronizado' : 'Sin conexión';
 }
 
 // Hash idéntico al de DentiAgenda: teléfono + código → llave
@@ -928,18 +943,16 @@ const GUIA = {
 
 /* ---------- DentiDatos ---------- */
 const RECOS_SALUD = [
-  { ico:'💎', t:'El esmalte dental', d:'Es el tejido más duro de todo tu cuerpo, ¡más que los huesos! Pero a diferencia de ellos, no se regenera. Por eso cuidarlo es tan importante.' },
-  { ico:'🦷', t:'Tus dientes son únicos', d:'Tu huella dental es tan única como tu huella digital. No hay dos personas con la misma dentadura, ni siquiera los gemelos.' },
-  { ico:'👅', t:'Dato curioso', d:'La lengua es el único músculo de tu cuerpo unido por un solo extremo. ¡Y tiene tu propia "huella" única también!' },
-  { ico:'🥤', t:'Tip: cuida el esmalte', d:'Los refrescos y bebidas ácidas debilitan el esmalte. Si tomas alguno, enjuágate con agua después y espera antes de cepillarte.' },
-  { ico:'😀', t:'Sonreír es contagioso', d:'Tu cerebro libera endorfinas al sonreír, y quien te ve tiende a sonreír de vuelta. Tu nueva sonrisa alegrará a muchos.' },
-  { ico:'🍎', t:'Tip con brackets', d:'Corta manzanas y alimentos duros en trozos pequeños. Morder directo con los dientes de adelante puede despegar un bracket.' },
-  { ico:'🦴', t:'Fuerza de mordida', d:'Tus molares pueden ejercer hasta 90 kg de fuerza al masticar. ¡Por eso los brackets van bien sujetos!' },
-  { ico:'⏳', t:'Los dientes cuentan historia', d:'Los arqueólogos determinan la edad y dieta de personas antiguas solo estudiando sus dientes. Son casi indestructibles.' },
-  { ico:'🩹', t:'Tip: cera de ortodoncia', d:'Si un bracket o alambre te roza, seca la zona y coloca un poco de cera. Trae siempre contigo, es tu mejor amiga.' },
-  { ico:'💧', t:'La saliva es increíble', d:'Produces hasta 1.5 litros de saliva al día. Protege tus dientes, ayuda a digerir y combate las bacterias mientras duermes.' },
-  { ico:'😬', t:'Tip: no faltes a tus citas', d:'Cada ajuste acorta tu tratamiento. Faltar solo lo alarga. Tu constancia es la mitad del éxito de tu sonrisa.' },
-  { ico:'🧀', t:'Aliados de tus dientes', d:'El queso, la leche y las verduras verdes fortalecen tu esmalte por su calcio. ¡Buenos snacks durante el tratamiento!' }
+  { ico:'💎', t:'El esmalte: tu armadura casi indestructible', d:'El esmalte de tus dientes es la sustancia más dura que produce tu cuerpo — más resistente que el acero en proporción a su peso. Puede aguantar la presión de morder algo con la fuerza de 90 kilos. Pero tiene un talón de Aquiles: no está vivo. A diferencia de un hueso roto que se regenera, cuando el esmalte se desgasta o se rompe, se fue para siempre. Por eso los ácidos de los refrescos son sus peores enemigos: lo disuelven poco a poco sin que lo sientas. Cuídalo, porque es la única armadura que tendrás toda la vida.' },
+  { ico:'🦷', t:'Tu sonrisa es única en el mundo', d:'Así como no hay dos huellas digitales iguales, no existen dos dentaduras idénticas — ni siquiera entre gemelos idénticos. La forma, el tamaño y las marcas de tus dientes son tan únicas que la odontología forense las usa para identificar personas cuando ningún otro método funciona. De hecho, tus dientes son tan resistentes que sobreviven condiciones que destruyen casi todo lo demás. En cierto sentido, tu sonrisa es una firma que llevas contigo para siempre.' },
+  { ico:'🥤', t:'El enemigo invisible de tus dientes', d:'No es el azúcar directamente lo que daña tus dientes, sino lo que pasa después. Las bacterias de tu boca se comen ese azúcar y, como desecho, producen ácido. Ese ácido es el que ataca el esmalte durante unos 20 minutos después de cada bocado o trago. Por eso "picar" dulces todo el día es peor que comerte un postre completo de una sola vez: mantienes tu boca en ácido constante. Un truco simple: después de algo dulce, enjuágate con agua para cortar el ataque.' },
+  { ico:'👅', t:'Tu lengua tiene su propia huella', d:'La lengua es el músculo más flexible de tu cuerpo y el único que trabaja unido por un solo extremo. Pero lo más curioso es que tiene su propia "huella" única, igual que tus dedos — algunos científicos proponen usarla como método de identificación. Además, es donde vive gran parte de las bacterias de tu boca. Por eso limpiar tu lengua al cepillarte no es opcional: elimina bacterias que causan mal aliento y que pueden pasar a tus dientes.' },
+  { ico:'🦴', t:'Muerdes con la fuerza de un mordisco animal', d:'Tus molares pueden ejercer hasta 90 kilos de fuerza al masticar — suficiente para partir una nuez sin herramientas. Esa fuerza viene de los músculos maseteros, los más fuertes de tu cuerpo en proporción a su tamaño. Curiosamente, aunque puedes generar esa potencia, tus dientes de enfrente (los incisivos) son delicados y están hechos para cortar, no para triturar. Por eso, con brackets, morder cosas duras con los dientes de adelante es la receta perfecta para despegar uno.' },
+  { ico:'⏳', t:'Tus dientes son cápsulas del tiempo', d:'Los dientes son tan resistentes que los arqueólogos pueden determinar la edad, la dieta e incluso las enfermedades de personas que vivieron hace miles de años, solo estudiándolos. Cada diente guarda "anillos de crecimiento" como los árboles, que registran momentos de estrés o desnutrición. Son la parte del cuerpo humano que mejor resiste el paso del tiempo. Literalmente, tu sonrisa podría contar tu historia mucho después de todo lo demás.' },
+  { ico:'💧', t:'La saliva: tu escudo natural gratuito', d:'Produces entre 1 y 1.5 litros de saliva al día — suficiente para llenar botellas. Y no es solo agua: contiene minerales que reparan el esmalte, enzimas que empiezan a digerir la comida y defensas que neutralizan ácidos y bacterias. Por eso tu boca se siente pastosa al despertar: mientras duermes produces mucha menos saliva, y las bacterias aprovechan para multiplicarse sin control. Ese es justo el motivo por el que el cepillado de la noche es el más importante del día.' },
+  { ico:'😀', t:'Sonreír te cambia el cerebro', d:'Cuando sonríes, tu cerebro libera endorfinas, dopamina y serotonina — el mismo cóctel químico que produce sentirte feliz. Lo increíble es que funciona incluso si sonríes "a propósito": tu cerebro no distingue del todo entre una sonrisa real y una forzada, y de todos modos mejora tu ánimo. Y hay más: sonreír es contagioso a nivel neurológico, quien te ve tiende a devolver la sonrisa sin darse cuenta. Tu nueva sonrisa no solo te hará bien a ti.' },
+  { ico:'🧀', t:'Alimentos que trabajan a tu favor', d:'Algunos alimentos son aliados naturales de tus dientes. El queso y los lácteos aportan calcio y suben el pH de tu boca, frenando los ácidos. Las verduras crujientes como zanahoria y apio actúan como "cepillo natural" y estimulan saliva. El té verde tiene compuestos que combaten bacterias. Y masticar (con moderación) alimentos fibrosos fortalece tus encías. Comer bien no solo cuida tu cuerpo: es una de las mejores defensas para tu sonrisa, sobre todo durante el tratamiento.' },
+  { ico:'😬', t:'La constancia es la mitad del tratamiento', d:'Aquí va la verdad sin rodeos: la ortodoncia funciona por movimientos pequeños y constantes. Cada ajuste que te hace tu dentista activa una fuerza suave que reacomoda tus dientes semana a semana. Cuando faltas a una cita o no usas tus elásticos, esa fuerza se detiene — y a veces hasta retrocede. No es que el tratamiento "no avance", es que se pausa. Tu disciplina (venir a tiempo, cuidar tus brackets, usar tus ligas) es literalmente la mitad del resultado final. La otra mitad la pone tu dentista.' }
 ];
 let scDdIdx = 0;
 function scRenderDentidatos(){
@@ -1872,6 +1885,10 @@ window.addEventListener('DOMContentLoaded', () => {
   scIniciarAuth(); // login anónimo de Firebase para leer citas
   scRenderCitas(); // actualiza el resumen de citas en el home
   scActualizarBotonPush(); // estado del botón de notificaciones
+  // punto de sincronización según internet
+  scSetSync(navigator.onLine && scFbOK);
+  window.addEventListener('online', ()=>scSetSync(scFbOK));
+  window.addEventListener('offline', ()=>scSetSync(false));
   // notificaciones recibidas mientras la app está abierta
   if(scMessaging){
     try{
