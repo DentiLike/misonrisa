@@ -4,21 +4,21 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <meta name="theme-color" content="#1f5b9e"/>
-<title>Mi Sonrisa by Dentilike · Cuidados con Brackets</title>
+<title>SmileLike by Dentilike · Cuidados con Brackets</title>
 <meta name="description" content="Guía interactiva de cuidados con brackets. Solucionador de urgencias, checklist diario y consejos de Mikes Molares. Dentilike."/>
 
 <!-- Open Graph / WhatsApp / Facebook preview -->
 <meta property="og:type" content="website"/>
-<meta property="og:title" content="Mi Sonrisa by Dentilike · Cuidados con Brackets"/>
+<meta property="og:title" content="SmileLike by Dentilike · Cuidados con Brackets"/>
 <meta property="og:description" content="Guía interactiva de cuidados con brackets. Solucionador de urgencias, checklist diario y consejos de Mikes Molares. Dentilike."/>
 <meta property="og:image" content="https://misonrisa.dentilike.com.mx/og-image.png"/>
 <meta property="og:image:type" content="image/png"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta property="og:url" content="https://misonrisa.dentilike.com.mx/"/>
-<meta property="og:site_name" content="Mi Sonrisa by Dentilike"/>
+<meta property="og:site_name" content="SmileLike by Dentilike"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Mi Sonrisa by Dentilike · Cuidados con Brackets"/>
+<meta name="twitter:title" content="SmileLike by Dentilike · Cuidados con Brackets"/>
 <meta name="twitter:description" content="Guía interactiva de cuidados con brackets. Dentilike."/>
 <meta name="twitter:image" content="https://misonrisa.dentilike.com.mx/og-image.png"/>
 <link rel="manifest" href="manifest.json"/>
@@ -50,6 +50,7 @@ img{max-width:100%; display:block}
 .topbar .marca{font-weight:600; font-size:1.05rem}
 .topbar .sub{font-size:.72rem; opacity:.85; margin-top:1px}
 .topbar .logo-icon{width:32px; height:32px; flex-shrink:0; object-fit:contain}
+.topbar .logo-smilelike-top{height:30px; width:auto; flex-shrink:0; object-fit:contain; background:#fff; border-radius:8px; padding:4px 10px}
 .topbar .titulo-wrap{flex:1; display:flex; align-items:center; gap:9px}
 .topbar .logo-dentilike-top{height:23px; width:auto; flex-shrink:0; object-fit:contain; background:#fff; border-radius:6px; padding:4px 8px}
 
@@ -255,9 +256,6 @@ img{max-width:100%; display:block}
 .citas-vincular input:focus{outline:none; border-color:var(--teal)}
 .citas-vincular .btn-vincular{width:100%; background:var(--teal); color:#0f172a; border:none; border-radius:12px; padding:13px; font-weight:700; font-size:.92rem; margin-top:16px}
 
-.streak-pill{display:inline-flex; align-items:center; gap:6px; background:var(--azul-claro); color:var(--azul-osc); font-weight:700; font-size:.8rem; padding:6px 12px; border-radius:999px; margin:10px auto 0}
-.streak-row{text-align:center}
-
 /* Section headers */
 .sec-head{padding:18px 0 10px}
 .sec-head h1{font-size:1.25rem; color:var(--azul-osc)}
@@ -421,9 +419,9 @@ img{max-width:100%; display:block}
 <div class="topbar">
   <button class="back" id="btnBack" onclick="scVolver()">←</button>
   <div class="titulo-wrap">
-    <img class="logo-icon" src="logo-misonrisa-icon.png" alt="Mi Sonrisa" onerror="this.style.display='none'">
-    <div>
-      <div class="marca" id="tbTitulo">Mi Sonrisa</div>
+    <img class="logo-smilelike-top" id="brandLogo" src="logo-smilelike.png" alt="SmileLike" onerror="this.style.display='none'">
+    <div id="brandText" style="display:none;">
+      <div class="marca" id="tbTitulo">SmileLike</div>
       <div class="sub" id="tbSub">by Dentilike</div>
     </div>
   </div>
@@ -442,7 +440,6 @@ img{max-width:100%; display:block}
     <div class="bocadillo" id="bocadillo">¡Hola! Soy <b>Mikes Molares</b> 🦷, el asistente del Dr. Miguel Alvarado y tu compañero en este viaje hacia una nueva sonrisa. Tócame para un tip del día 👆</div>
     <a href="#" class="link-bienvenida" onclick="scMostrarBienvenida(); return false;">🎉 ¿Te acaban de colocar los brackets? Toca aquí</a>
     <div class="home-title">¿Qué necesitas hoy?</div>
-    <div class="streak-row"><span class="streak-pill" id="streakPill">🔥 0 días de racha</span></div>
 
     <button class="btn-push" id="btnPush" onclick="scActivarNotificaciones()">🔔 Activar recordatorios de citas</button>
 
@@ -556,7 +553,7 @@ img{max-width:100%; display:block}
 <div class="modal-overlay" id="modalInstalar">
   <div class="modal-card">
     <img src="avatar-dr.png" alt="Mikes Molares" onerror="this.style.display='none'">
-    <h2>📲 Instala Mi Sonrisa</h2>
+    <h2>📲 Instala SmileLike</h2>
     <p>Así la abres directo desde tu pantalla de inicio, como cualquier otra app — y funciona incluso sin internet.</p>
     <div id="instalarContenido"></div>
     <button class="btn-cerrar" onclick="scCerrarInstalar()">Entendido</button>
@@ -585,7 +582,7 @@ img{max-width:100%; display:block}
 
 <script>
 /* ============================================================
-   Mi Sonrisa by Dentilike — cuidados con brackets
+   SmileLike by Dentilike — cuidados con brackets
    PWA con Firebase para "Mis Citas" (lectura segura).
    ============================================================ */
 
@@ -697,7 +694,7 @@ const CONFIG = {
   nombreClinica: "Dr. Miguel Alvarado · Dentilike"
 };
 function scWhatsAppClinica(){
-  const msg = encodeURIComponent("Hola, escribo desde la app Mi Sonrisa. Necesito ayuda con:");
+  const msg = encodeURIComponent("Hola, escribo desde la app SmileLike. Necesito ayuda con:");
   window.open(`https://wa.me/${CONFIG.telClinica}?text=${msg}`, '_blank');
 }
 
@@ -989,7 +986,7 @@ function scDdNav(dir){
 /* ---------- Navegación ---------- */
 let scStack = ['home'];
 const scTitulos = {
-  home:{t:"Mi Sonrisa", s:"By Dentilike · Cuidados con brackets"},
+  home:{t:"SmileLike", s:"By Dentilike · Cuidados con brackets"},
   urgencia:{t:"Urgencias", s:"¿Qué te está pasando?"},
   urgenciaDetalle:{t:"Urgencias", s:"Qué hacer ahora"},
   guia:{t:"Guía de cuidados", s:"Higiene, dieta, dolor y citas"},
@@ -1005,6 +1002,9 @@ function scMostrar(nombre){
   document.getElementById('tbTitulo').textContent = info.t;
   document.getElementById('tbSub').textContent = info.s;
   document.getElementById('btnBack').classList.toggle('show', nombre !== 'home');
+  const esHome = nombre === 'home';
+  document.getElementById('brandLogo').style.display = esHome ? '' : 'none';
+  document.getElementById('brandText').style.display = esHome ? 'none' : '';
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === nombre || (nombre==='urgenciaDetalle' && b.dataset.nav==='urgencia')));
   window.scrollTo(0,0);
 }
@@ -1506,7 +1506,7 @@ async function scRenderCitas(){
     cont.innerHTML = `
       <div class="citas-vincular">
         <div class="ico-big">👋</div>
-        <h3>¡Bienvenido a Mi Sonrisa!</h3>
+        <h3>¡Bienvenido a SmileLike!</h3>
         <p>Aquí verás tus citas, tu plan de tratamiento y el avance de tu ortodoncia. Para empezar, vincula tu teléfono con el código que te dio el Dr. Miguel en tu consulta.</p>
         <label>Tu teléfono (10 dígitos)</label>
         <input type="tel" id="inputCitasTel" placeholder="Ej. 444 123 4567" inputmode="numeric">
@@ -1893,7 +1893,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if(scMessaging){
     try{
       scMessaging.onMessage(function(payload){
-        const t = (payload.notification && payload.notification.title) || 'Mi Sonrisa';
+        const t = (payload.notification && payload.notification.title) || 'SmileLike';
         const b = (payload.notification && payload.notification.body) || '';
         alert(`🔔 ${t}\n\n${b}`);
       });

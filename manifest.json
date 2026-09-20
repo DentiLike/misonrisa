@@ -1,12 +1,12 @@
 {
-  "name": "Mi Sonrisa by Dentilike",
-  "short_name": "Mi Sonrisa",
+  "name": "SmileLike by Dentilike",
+  "short_name": "SmileLike",
   "description": "Cuidados con brackets: urgencias, guía y checklist diario. Dentilike.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1f5b9e",
+  "theme_color": "#124578",
   "orientation": "portrait",
   "icons": [
     { "src": "favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
