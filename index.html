@@ -1059,6 +1059,7 @@ function scCerrarBienvenida(){
    Contrato de campos definido por DentiAgenda — no cambiar nombres.
    ============================================================ */
 let scHorariosClinica = null;   // cache de config_publica/horarios
+let scDisponibilidad = null;    // cache de config_publica/disponibilidad
 let scAgendarEnviando = false;
 
 const AGENDAR_MOTIVOS = ['Cita de control', 'Revisión', 'Dolor o molestia', 'Se me cayó un bracket', 'Ajuste', 'Otro'];
@@ -1103,6 +1104,10 @@ async function scCargarHorarios(){
     if(!scAuthListo) await scIniciarAuth();
     const doc = await scDB.collection('config_publica').doc('horarios').get();
     scHorariosClinica = doc.exists ? doc.data() : scHorarioPorDefecto();
+    try{
+      const dd = await scDB.collection('config_publica').doc('disponibilidad').get();
+      scDisponibilidad = (dd.exists && dd.data().dias) ? dd.data().dias : null;
+    }catch(e){ scDisponibilidad = null; }
   }catch(e){ console.error('horarios error', e); scHorariosClinica = scHorarioPorDefecto(); }
   return scHorariosClinica;
 }
@@ -1204,10 +1209,16 @@ function scAgCambiarMes(dir){
 function scAgPickFecha(iso){
   scAgFechaSel = iso; scAgHoraSel = '';
   scRenderCalendario();
-  // generar horas
-  const h = scHorariosClinica || scHorarioPorDefecto();
-  const manana = scHorasEntre(h.mInicio, h.mFin);
-  const tarde = scHorasEntre(h.vInicio, h.vFin);
+  // horas libres reales si hay disponibilidad; si no, horario completo
+  let horasLibres;
+  if(scDisponibilidad && scDisponibilidad[iso]){
+    horasLibres = scDisponibilidad[iso];
+  } else {
+    const h = scHorariosClinica || scHorarioPorDefecto();
+    horasLibres = [...scHorasEntre(h.mInicio, h.mFin), ...scHorasEntre(h.vInicio, h.vFin)];
+  }
+  const manana = horasLibres.filter(x=>x < '14:00');
+  const tarde = horasLibres.filter(x=>x >= '14:00');
   let html = '';
   if(manana.length){
     html += `<div class="ag-turno">Mañana</div>`;
@@ -1217,7 +1228,7 @@ function scAgPickFecha(iso){
     html += `<div class="ag-turno">Tarde</div>`;
     html += tarde.map(hr=>`<button class="ag-chip ag-chip-hora" data-hora="${hr}" onclick="scAgPickHora('${hr}')">${scHoraAmPm(hr)}</button>`).join('');
   }
-  if(!html) html = `<div class="ag-hint">No hay horarios configurados.</div>`;
+  if(!html) html = `<div class="ag-hint">Sin horas libres ese día. Elige otro.</div>`;
   document.getElementById('agChipsHora').innerHTML = html;
 }
 function scAgPickHora(hr){

@@ -1,5 +1,5 @@
 // Smile Like by Dentilike (antes "Mi Sonrisa") — v19
-const CACHE_NAME = "misonrisa-v47";
+const CACHE_NAME = "smilelike-disp-1";
 const ASSETS = [
   "./avatar-patrias.png",
   "./avatar-halloween.png",
