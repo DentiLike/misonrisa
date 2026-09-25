@@ -1187,7 +1187,12 @@ function scRenderCalendario(){
     const iso = `${scAgCalAnio}-${String(scAgCalMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const esDomingo = fecha.getDay()===0;
     const esPasado = fecha < manana;
-    const deshab = esDomingo || esPasado;
+    // día sin disponibilidad publicada = bloqueado (no hay horas libres)
+    let sinCupo = false;
+    if(scDisponibilidad){
+      if(!scDisponibilidad[iso] || !scDisponibilidad[iso].length) sinCupo = true;
+    }
+    const deshab = esDomingo || esPasado || sinCupo;
     const sel = (iso === scAgFechaSel) ? ' sel' : '';
     if(deshab){
       html += `<span class="cal-dia deshab">${d}</span>`;
