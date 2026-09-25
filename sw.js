@@ -1,39 +1,13 @@
-// Smile Like by Dentilike (antes "Mi Sonrisa") — v19
-const CACHE_NAME = "smilelike-disp-1";
-const ASSETS = [
-  "./avatar-patrias.png",
-  "./avatar-halloween.png",
-  "./avatar-muertos.png",
-  "./avatar-anonuevo.png",
-  "./avatar-valentin.png",
-  "./firebase-messaging-sw.js",
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./avatar-dr.png",
-  "./avatar-ok.png",
-  "./avatar-asustado.png",
-  "./favicon.png",
-  "./logo-misonrisa-icon.png",
-  "./logo-dentilike.png",
-  "./logo-dentilike-compact.png",
-  "./icon-maskable.png",
-  "./og-image.jpg",
-  "./cepillado-1.png",
-  "./cepillado-2.png",
-  "./cepillado-3.png",
-  "./cepillado-4.png",
-  "./cepillado-5.png",
-  "./cepillado-6.png"
-];
+// Service Worker — ARRANQUE INSTANTÁNEO (para datos móviles lentos)
+// App: smilelike
+const CACHE_NAME = "smilelike-v22";
+const ASSETS = ["./", "./index.html", "./manifest.json"];
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
   e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      Promise.all(
-        ASSETS.map((url) => cache.add(url).catch(() => {}))
-      )
+    caches.open(CACHE_NAME).then((c) =>
+      Promise.all(ASSETS.map((u) => c.add(u).catch(() => {})))
     )
   );
 });
@@ -49,18 +23,41 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
-  e.respondWith(
-    caches.match(e.request).then((cached) => {
-      const fetchPromise = fetch(e.request)
-        .then((res) => {
+  if (e.request.url.includes("firestore") ||
+      e.request.url.includes("firebase") ||
+      e.request.url.includes("googleapis") ||
+      e.request.url.includes("gstatic")) {
+    return;
+  }
+  if (e.request.mode === "navigate") {
+    e.respondWith(
+      caches.match("./index.html").then((cached) => {
+        const red = fetch(e.request).then((res) => {
           if (res && res.status === 200) {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+            const copia = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put("./index.html", copia));
           }
           return res;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
+        }).catch(() => cached);
+        return cached || red;
+      })
+    );
+    return;
+  }
+  e.respondWith(
+    caches.match(e.request).then((cached) => {
+      const red = fetch(e.request).then((res) => {
+        if (res && res.status === 200) {
+          const copia = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(e.request, copia));
+        }
+        return res;
+      }).catch(() => cached);
+      return cached || red;
     })
   );
+});
+
+self.addEventListener("message", (e) => {
+  if (e.data === "skipWaiting") self.skipWaiting();
 });
