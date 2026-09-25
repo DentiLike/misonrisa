@@ -366,6 +366,11 @@ img{max-width:100%; display:block}
 .dd-item-txt b{display:block; color:var(--azul-osc); font-size:.9rem; margin-bottom:3px}
 .dd-item-txt span{font-size:.83rem; color:var(--gris); line-height:1.5}
 .solic-panel{background:#fffbeb; border:1.5px solid #fde68a; border-radius:16px; padding:16px; margin-bottom:14px}
+.aviso-rechazo{position:relative; background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:16px; padding:16px 16px 16px 14px; margin-bottom:14px; display:flex; gap:12px; align-items:flex-start}
+.aviso-rechazo .ar-x{position:absolute; top:8px; right:10px; background:none; border:none; color:#93a5c4; font-size:1rem; cursor:pointer; padding:2px 6px}
+.aviso-rechazo .ar-ico{font-size:1.5rem; flex-shrink:0}
+.aviso-rechazo .ar-txt b{display:block; color:#1e40af; font-size:.9rem; margin-bottom:4px}
+.aviso-rechazo .ar-txt span{font-size:.83rem; color:#3b5480; line-height:1.5}
 .solic-head{color:#92400e; font-weight:700; font-size:.95rem; margin-bottom:10px; font-family:'Fredoka',sans-serif}
 .solic-item{display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid #fde68a}
 .solic-item:last-of-type{border-bottom:none}
@@ -1370,6 +1375,7 @@ async function scLeerCitasDeFirebase(tel, cod){
     const data = doc.data();
     scCitasCache = (data.citas||[]).slice().sort((a,b)=> (a.fechaISO||'').localeCompare(b.fechaISO||''));
     scPlanCache = data.plan || [];
+    scAvisosRechazo = data.avisosRechazo || [];
     scOrtoData = {
       activa: !!data.ortodoncia,
       porcentaje: data.ortoPorcentaje || 0,
@@ -1380,6 +1386,7 @@ async function scLeerCitasDeFirebase(tel, cod){
 }
 
 let scPlanCache = [];
+let scAvisosRechazo = [];
 let scOrtoData = { activa:false, porcentaje:0, faseTexto:'Fase 1: Alineación y nivelación' };
 
 function scObtenerCitas(){ return scCitasCache; }
@@ -1606,6 +1613,7 @@ async function scRenderCitas(){
   }
   document.getElementById('citasContenido').innerHTML = `
     <button class="btn-agendar-citas" onclick="scIr('agendar')">➕ Agendar una cita nueva</button>
+    ${scRenderAvisosRechazo()}
     ${scRenderSolicitudesPendientes(citas)}
     <div class="citas-panel">
       <div class="panel-head">Tus próximas citas</div>
@@ -1617,6 +1625,39 @@ async function scRenderCitas(){
     ${scRenderPlanTratamiento()}`;
 
   scActualizarAvisoProximaCita();
+}
+
+// Muestra avisos de rechazo (solicitudes que el doctor no pudo confirmar)
+function scRenderAvisosRechazo(){
+  const avisos = scAvisosRechazo || [];
+  if(!avisos.length) return '';
+  return avisos.map(a=>{
+    const f = scFechaLegible(a.fecha);
+    return `<div class="aviso-rechazo">
+      <button class="ar-x" onclick="scCerrarAvisoRechazo('${a.id}')">✕</button>
+      <div class="ar-ico">📋</div>
+      <div class="ar-txt">
+        <b>Tu solicitud necesita ajustarse</b>
+        <span>La cita que pediste para el ${f.diaSemana} ${f.dia} de ${f.mes} a las ${scHoraAmPm(a.hora)} necesita ajustarse. Te contactaremos para buscar un mejor horario. También puedes pedir otra fecha. 💙</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function scCerrarAvisoRechazo(idAviso){
+  scAvisosRechazo = (scAvisosRechazo||[]).filter(a => a.id !== idAviso);
+  // guardar en Firebase (quitar el aviso)
+  const tel = localStorage.getItem('sc_citas_tel');
+  const cod = localStorage.getItem('sc_citas_codigo');
+  if(scFbOK && tel && cod){
+    try{
+      if(!scAuthListo) await scIniciarAuth();
+      const llave = await scHashLlave(tel, cod);
+      const doc = await scDB.collection('citas_pacientes').doc(llave).get();
+      const nombre = doc.exists ? (doc.data().nombre||'') : '';
+      await scDB.collection('citas_pacientes').doc(llave).set({ nombre:nombre, avisosRechazo: scAvisosRechazo }, { merge:true });
+    }catch(e){ console.error('cerrar aviso rechazo', e); }
+  }
+  scRenderCitas();
 }
 
 // Muestra solicitudes pendientes; si la cita ya existe en las citas reales, la quita (fue aceptada)
