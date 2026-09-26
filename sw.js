@@ -1,6 +1,6 @@
 // Service Worker — ARRANQUE INSTANTÁNEO (para datos móviles lentos)
-// App: dentiagenda
-const CACHE_NAME = "dentiagenda-v22";
+// App: smilelike
+const CACHE_NAME = "smilelike-v22";
 const ASSETS = ["./", "./index.html", "./manifest.json"];
 
 self.addEventListener("install", (e) => {
