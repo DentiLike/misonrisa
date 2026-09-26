@@ -93,6 +93,17 @@ img{max-width:100%; display:block}
 .install-banner .cerrar{position:absolute; top:6px; right:8px; background:none; border:none; color:#fff; opacity:.7; font-size:.9rem; padding:4px}
 .link-instalar{display:block; text-align:center; font-size:.78rem; color:var(--gris); margin:4px 0 2px; text-decoration:underline}
 .btn-push{display:block; width:100%; background:linear-gradient(135deg,var(--azul),var(--teal-osc)); color:#fff; border:none; border-radius:14px; padding:13px; font-weight:700; font-size:.9rem; margin:12px 0 4px; box-shadow:var(--sombra); cursor:pointer}
+.push-card{display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border:1.5px solid var(--borde); border-radius:14px; padding:14px 16px; margin:12px 0 4px; box-shadow:var(--sombra)}
+.push-info{text-align:left}
+.push-titulo{font-weight:700; color:var(--azul-osc); font-size:.9rem}
+.push-sub{font-size:.74rem; color:var(--gris); margin-top:2px}
+.push-switch{position:relative; display:inline-block; width:52px; height:29px; flex-shrink:0}
+.push-switch input{position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; z-index:2}
+.push-switch .ps-slider{position:absolute; inset:0; background:#cbd5e0; border-radius:999px; transition:.2s; z-index:1}
+.push-switch .ps-knob{position:absolute; top:3px; left:3px; width:23px; height:23px; background:#fff; border-radius:50%; transition:.2s; z-index:1; box-shadow:1px 1px 3px rgba(0,0,0,.25)}
+.push-switch input:checked ~ .ps-slider{background:var(--ok)}
+.push-switch input:checked ~ .ps-knob{left:26px}
+.btn-push-probar{display:block; width:100%; background:#eff6ff; color:var(--azul-osc); border:1.5px solid #bfdbfe; border-radius:12px; padding:11px; font-weight:600; font-size:.85rem; margin:0 0 4px; cursor:pointer}
 .btn-push.activo{background:#ecfdf5; color:var(--ok); border:1.5px solid #a7e3ca; box-shadow:none}
 .btn-push:active{transform:scale(.99)}
 
@@ -466,7 +477,17 @@ img{max-width:100%; display:block}
     <a href="#" class="link-bienvenida" onclick="scMostrarBienvenida(); return false;">🎉 ¿Te acaban de colocar los brackets? Toca aquí</a>
     <div class="home-title">¿Qué necesitas hoy?</div>
 
-    <button class="btn-push" id="btnPush" onclick="scActivarNotificaciones()">🔔 Activar recordatorios de citas</button>
+    <div class="push-card">
+      <div class="push-info">
+        <div class="push-titulo">🔔 Recordatorios de citas</div>
+        <div class="push-sub" id="scPushSub">Recibe avisos de tus próximas citas</div>
+      </div>
+      <label class="push-switch">
+        <input type="checkbox" id="scPushSwitch" onchange="scTogglePush()">
+        <span class="ps-slider"></span><span class="ps-knob"></span>
+      </label>
+    </div>
+    <button class="btn-push-probar" id="scBtnProbar" style="display:none;" onclick="scProbarNotificacion()">🧪 Probar notificación</button>
 
     <div class="install-banner" id="installBanner" style="display:none">
       <button class="cerrar" onclick="scOcultarBanner()">✕</button>
@@ -678,6 +699,7 @@ async function scActivarNotificaciones(){
     let tokens = (doc.exists && doc.data().pushTokens) ? doc.data().pushTokens : [];
     if(!tokens.includes(token)) tokens.push(token);
     await scDB.collection('citas_pacientes').doc(llave).set({ nombre: nombre, pushTokens: tokens }, { merge:true });
+    localStorage.setItem('sc_push_token', token);
     localStorage.setItem('sc_push_activo','1');
     scActualizarBotonPush();
     alert('✅ ¡Listo! Ahora recibirás recordatorios de tus citas.');
@@ -689,7 +711,56 @@ async function scActivarNotificaciones(){
   }
 }
 
+async function scTogglePush(){
+  const sw = document.getElementById('scPushSwitch');
+  if(sw.checked){ await scActivarNotificaciones(); }
+  else { await scDesactivarNotificaciones(); }
+}
+async function scDesactivarNotificaciones(){
+  try{
+    const miToken = localStorage.getItem('sc_push_token');
+    const tel = localStorage.getItem('sc_citas_tel');
+    const cod = localStorage.getItem('sc_citas_codigo');
+    if(miToken && tel && cod){
+      if(!scAuthListo) await scIniciarAuth();
+      const llave = await scHashLlave(tel, cod);
+      const doc = await scDB.collection('citas_pacientes').doc(llave).get();
+      const nombre = doc.exists ? (doc.data().nombre||'') : '';
+      let tokens = (doc.exists && doc.data().pushTokens) ? doc.data().pushTokens : [];
+      tokens = tokens.filter(t => t !== miToken);
+      await scDB.collection('citas_pacientes').doc(llave).set({ nombre:nombre, pushTokens: tokens }, { merge:true });
+    }
+    localStorage.removeItem('sc_push_token');
+    localStorage.setItem('sc_push_activo','0');
+    scActualizarBotonPush();
+    alert('🔕 Recordatorios desactivados. Ya no recibirás avisos en este dispositivo.');
+  }catch(e){ console.error('desactivar', e); alert('No se pudo desactivar. Revisa tu conexión.'); scActualizarBotonPush(); }
+}
+async function scProbarNotificacion(){
+  if(Notification.permission !== 'granted'){ alert('Primero activa los recordatorios.'); return; }
+  try{
+    const reg = await navigator.serviceWorker.getRegistration();
+    if(reg){ await reg.showNotification('🦷 Prueba Mi Sonrisa', { body:'¡Tus notificaciones funcionan! Aquí verás tus recordatorios de citas. ✓', icon:'favicon.png' }); }
+    else { new Notification('🦷 Prueba Mi Sonrisa', { body:'¡Tus notificaciones funcionan! ✓', icon:'favicon.png' }); }
+  }catch(e){ console.error('probar', e); alert('No se pudo mostrar la prueba. Revisa los permisos en tu celular.'); }
+}
+
 function scActualizarBotonPush(){
+  const sw = document.getElementById('scPushSwitch');
+  if(!sw) return;
+  const permiso = ('Notification' in window) ? Notification.permission : 'denied';
+  const activo = (permiso === 'granted') && (localStorage.getItem('sc_push_activo') === '1');
+  sw.checked = activo;
+  const sub = document.getElementById('scPushSub');
+  if(sub){
+    if(permiso === 'denied') sub.textContent = 'Bloqueadas — actívalas en ajustes del celular';
+    else if(activo) sub.textContent = 'Activadas ✓ · recibirás tus recordatorios';
+    else sub.textContent = 'Recibe avisos de tus próximas citas';
+  }
+  const bp = document.getElementById('scBtnProbar');
+  if(bp) bp.style.display = activo ? 'block' : 'none';
+}
+function scActualizarBotonPush_viejo(){
   const b = document.getElementById('btnPush');
   if(!b) return;
   const activo = localStorage.getItem('sc_push_activo') === '1' && Notification.permission === 'granted';
@@ -1054,7 +1125,7 @@ function scIr(nombre){
   if (nombre === 'urgencia') scRenderUrgList();
   if (nombre === 'guia') scRenderGuia();
   if (nombre === 'dentidatos') scRenderDentidatos();
-  if (nombre === 'citas') scRenderCitas();
+  if (nombre === 'citas') { scRenderCitas(); localStorage.setItem('sc_vio_salud','1'); }
   if (nombre === 'agendar') scRenderAgendar();
   if (nombre === 'tratamiento') scRenderTratamiento();
 }
@@ -1959,6 +2030,12 @@ function scActualizarAvisoProximaCita(){
     boc.innerHTML = `${saludoFestivo}¡Hola! Soy <b>Mikes Molares</b> 🦷, el asistente del Dr. Miguel Alvarado y tu compañero en este viaje hacia una nueva sonrisa. Tócame para un tip del día 👆`;
   }
   // si no hay ni cita ni festividad, se queda el saludo normal del HTML
+  // invitación a Mi Salud (solo si está vinculado y NO ha entrado aún)
+  if(scCitasVinculado() && localStorage.getItem('sc_vio_salud') !== '1'){
+    boc.innerHTML += `<div style="margin-top:10px; background:#ecfdf5; border:1px solid #a7e3ca; border-radius:12px; padding:11px 12px; font-size:.83rem; color:#065f46; line-height:1.4;">
+      💚 ¿Ya conoces la sección <b>Mi Salud</b>? Ahí puedes ver tus citas, tu plan de tratamiento, tu avance y tus estudios. ¡Échale un ojo abajo! 👇
+    </div>`;
+  }
 }
 
 function scAbrirUrgencia(id){
