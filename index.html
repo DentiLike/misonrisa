@@ -143,6 +143,23 @@ img{max-width:100%; display:block}
 
 /* Mis Citas — estilo degradado moderno */
 .citas-panel{background:linear-gradient(160deg, var(--azul), var(--azul-osc)); border-radius:20px; padding:20px; margin-top:4px; box-shadow:0 12px 30px rgba(20,64,110,.28)}
+.tip-cuidado{background:#fff; border:1.5px solid var(--borde); border-left:5px solid var(--teal); border-radius:14px; padding:14px 16px; margin-top:14px; display:flex; gap:12px; align-items:flex-start; box-shadow:var(--sombra)}
+.estudios-panel{background:#fff; border:1.5px solid var(--borde); border-radius:16px; padding:18px; margin-top:14px; box-shadow:var(--sombra)}
+.estudios-head{color:var(--azul-osc); font-weight:700; font-size:1.05rem; font-family:'Fredoka',sans-serif; margin-bottom:2px}
+.estudios-sub{color:var(--gris); font-size:.8rem; margin-bottom:14px}
+.estudios-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+.estudio-item{cursor:pointer; border-radius:12px; overflow:hidden; border:1.5px solid var(--borde); background:#f8fafc; transition:transform .15s}
+.estudio-item:active{transform:scale(.97)}
+.estudio-item img{width:100%; height:110px; object-fit:cover; display:block; background:#0f172a}
+.estudio-nombre{font-size:.78rem; color:var(--tinta); font-weight:600; padding:8px 10px; text-align:center}
+.estudio-visor{display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.92); align-items:center; justify-content:center; padding:16px}
+.estudio-visor .ev-inner{text-align:center; max-width:100%; max-height:100%}
+.estudio-visor .ev-nombre{color:#fff; font-weight:700; margin-bottom:10px; font-size:1rem}
+.estudio-visor img{max-width:100%; max-height:78vh; border-radius:10px; object-fit:contain}
+.estudio-visor .ev-cerrar{color:rgba(255,255,255,.7); font-size:.85rem; margin-top:12px}
+.tip-cuidado .tc-ico{font-size:1.5rem; flex-shrink:0}
+.tip-cuidado .tc-txt b{display:block; color:var(--azul-osc); font-size:.88rem; margin-bottom:3px}
+.tip-cuidado .tc-txt span{font-size:.83rem; color:var(--gris); line-height:1.5}
 .btn-agendar-citas{display:block; width:100%; background:var(--oro); color:#3d2f00; border:none; border-radius:14px; padding:14px; font-weight:700; font-size:.95rem; margin-bottom:14px; box-shadow:var(--sombra); cursor:pointer}
 .btn-agendar-citas:active{transform:scale(.99)}
 
@@ -461,6 +478,10 @@ img{max-width:100%; display:block}
         <div class="ico">📆</div>
         <div class="txt"><b>Mis citas</b><span id="homeCitasResumen">Consulta y confirma tus próximas citas</span></div>
       </button>
+      <button class="menu-card destacada" style="border-left-color:var(--teal)" onclick="scIr('tratamiento')">
+        <div class="ico">😁</div>
+        <div class="txt"><b>Mi Tratamiento</b><span>Tu plan, tu avance y consejos para tu sonrisa</span></div>
+      </button>
       <button class="menu-card destacada" style="border-left-color:var(--oro)" onclick="scIr('agendar')">
         <div class="ico">📅</div>
         <div class="txt"><b>Quiero agendar una cita</b><span>Pide tu cita y el Dr. Miguel la confirma</span></div>
@@ -530,6 +551,11 @@ img{max-width:100%; display:block}
   <div class="screen" id="screenAgendar">
     <div class="sec-head"><h1>Agendar una cita</h1><p>Pide tu cita y el Dr. Miguel la revisará y confirmará.</p></div>
     <div id="agendarContenido"></div>
+  </div>
+
+  <div class="screen" id="screenTratamiento">
+    <div class="sec-head"><h1>Mi Tratamiento</h1><p>Tu plan, tu avance y consejos para cuidar tu sonrisa.</p></div>
+    <div id="tratamientoContenido"></div>
   </div>
 
 </div>
@@ -954,7 +980,11 @@ const RECOS_SALUD = [
   { ico:'💧', t:'La saliva: tu escudo natural gratuito', d:'Produces entre 1 y 1.5 litros de saliva al día — suficiente para llenar botellas. Y no es solo agua: contiene minerales que reparan el esmalte, enzimas que empiezan a digerir la comida y defensas que neutralizan ácidos y bacterias. Por eso tu boca se siente pastosa al despertar: mientras duermes produces mucha menos saliva, y las bacterias aprovechan para multiplicarse sin control. Ese es justo el motivo por el que el cepillado de la noche es el más importante del día.' },
   { ico:'😀', t:'Sonreír te cambia el cerebro', d:'Cuando sonríes, tu cerebro libera endorfinas, dopamina y serotonina — el mismo cóctel químico que produce sentirte feliz. Lo increíble es que funciona incluso si sonríes "a propósito": tu cerebro no distingue del todo entre una sonrisa real y una forzada, y de todos modos mejora tu ánimo. Y hay más: sonreír es contagioso a nivel neurológico, quien te ve tiende a devolver la sonrisa sin darse cuenta. Tu nueva sonrisa no solo te hará bien a ti.' },
   { ico:'🧀', t:'Alimentos que trabajan a tu favor', d:'Algunos alimentos son aliados naturales de tus dientes. El queso y los lácteos aportan calcio y suben el pH de tu boca, frenando los ácidos. Las verduras crujientes como zanahoria y apio actúan como "cepillo natural" y estimulan saliva. El té verde tiene compuestos que combaten bacterias. Y masticar (con moderación) alimentos fibrosos fortalece tus encías. Comer bien no solo cuida tu cuerpo: es una de las mejores defensas para tu sonrisa, sobre todo durante el tratamiento.' },
-  { ico:'😬', t:'La constancia es la mitad del tratamiento', d:'Aquí va la verdad sin rodeos: la ortodoncia funciona por movimientos pequeños y constantes. Cada ajuste que te hace tu dentista activa una fuerza suave que reacomoda tus dientes semana a semana. Cuando faltas a una cita o no usas tus elásticos, esa fuerza se detiene — y a veces hasta retrocede. No es que el tratamiento "no avance", es que se pausa. Tu disciplina (venir a tiempo, cuidar tus brackets, usar tus ligas) es literalmente la mitad del resultado final. La otra mitad la pone tu dentista.' }
+  { ico:'😬', t:'La constancia es la mitad del tratamiento', d:'Aquí va la verdad sin rodeos: la ortodoncia funciona por movimientos pequeños y constantes. Cada ajuste que te hace tu dentista activa una fuerza suave que reacomoda tus dientes semana a semana. Cuando faltas a una cita o no usas tus elásticos, esa fuerza se detiene — y a veces hasta retrocede. No es que el tratamiento "no avance", es que se pausa. Tu disciplina (venir a tiempo, cuidar tus brackets, usar tus ligas) es literalmente la mitad del resultado final. La otra mitad la pone tu dentista.' },
+  { ico:'🌡️', t:'Por qué duele después de un ajuste', d:'Es normal sentir molestia uno o dos días después de cada ajuste, y hay una razón fascinante detrás. Cuando el arco aplica fuerza, tu hueso literalmente se remodela: por un lado se disuelve un poquito para dejar mover el diente, y por el otro se forma hueso nuevo para sostenerlo en su nueva posición. Ese proceso libera sustancias que sensibilizan la zona. La buena noticia: significa que está funcionando. Un analgésico suave y comida blanda esos días ayudan mucho.' },
+  { ico:'🕐', t:'Tus dientes se mueven toda la vida', d:'Aunque no lo creas, tus dientes nunca dejan de moverse, incluso sin brackets. Con los años tienden a apiñarse hacia adelante — por eso muchos adultos notan que sus dientes de abajo se encimaron con el tiempo. Esto explica por qué los retenedores son tan importantes al terminar la ortodoncia: sin ellos, los dientes lentamente intentan volver a donde estaban. Usar tu retenedor es lo que hace que tu nueva sonrisa dure para siempre.' },
+  { ico:'🦠', t:'Tu boca es un ecosistema vivo', d:'En tu boca viven más de 700 especies de bacterias, y la mayoría son buenas: te ayudan a digerir y protegen contra invasores. El problema es el equilibrio. Cuando comes mucha azúcar, las bacterias "malas" (las que producen ácido) se multiplican y le ganan a las buenas. Cuidar tu higiene no es "matar todas las bacterias", es mantener el equilibrio a tu favor. Por eso el cepillado y el hilo son tan importantes, sobre todo con brackets donde se esconden más.' },
+  { ico:'💪', t:'El diente más fuerte y el más ocupado', d:'Tus primeros molares (esas muelas grandes del fondo que salen alrededor de los 6 años) son las que más trabajo hacen en toda tu vida: soportan la mayor parte de la fuerza al masticar. Por eso también son las que más cuidado necesitan. Curiosamente, son de los dientes que más temprano salen y más tiempo tienen que durarte. Cuidarlas bien desde jóvenes es una de las mejores inversiones para tu salud dental a largo plazo.' }
 ];
 let scDdIdx = 0;
 function scRenderDentidatos(){
@@ -997,11 +1027,12 @@ const scTitulos = {
   guia:{t:"Guía de cuidados", s:"Higiene, dieta, dolor y citas"},
   dentidatos:{t:"DentiDatos", s:"Datos y consejos para tu sonrisa"},
   citas:{t:"Mis citas", s:"Tus próximas citas"},
-  agendar:{t:"Agendar cita", s:"Pide tu cita"}
+  agendar:{t:"Agendar cita", s:"Pide tu cita"},
+  tratamiento:{t:"Mi Tratamiento", s:"Tu plan y tu avance"}
 };
 function scMostrar(nombre){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const map = {home:'screenHome', urgencia:'screenUrgencia', urgenciaDetalle:'screenUrgenciaDetalle', guia:'screenGuia', dentidatos:'screenDentidatos', citas:'screenCitas', agendar:'screenAgendar'};
+  const map = {home:'screenHome', urgencia:'screenUrgencia', urgenciaDetalle:'screenUrgenciaDetalle', guia:'screenGuia', dentidatos:'screenDentidatos', citas:'screenCitas', agendar:'screenAgendar', tratamiento:'screenTratamiento'};
   document.getElementById(map[nombre]).classList.add('active');
   const info = scTitulos[nombre] || scTitulos.home;
   document.getElementById('tbTitulo').textContent = info.t;
@@ -1022,6 +1053,7 @@ function scIr(nombre){
   if (nombre === 'dentidatos') scRenderDentidatos();
   if (nombre === 'citas') scRenderCitas();
   if (nombre === 'agendar') scRenderAgendar();
+  if (nombre === 'tratamiento') scRenderTratamiento();
 }
 function scVolver(){
   if (scStack.length > 1) scStack.pop();
@@ -1376,6 +1408,7 @@ async function scLeerCitasDeFirebase(tel, cod){
     scCitasCache = (data.citas||[]).slice().sort((a,b)=> (a.fechaISO||'').localeCompare(b.fechaISO||''));
     scPlanCache = data.plan || [];
     scAvisosRechazo = data.avisosRechazo || [];
+    scEstudiosCache = data.estudios || [];
     scOrtoData = {
       activa: !!data.ortodoncia,
       porcentaje: data.ortoPorcentaje || 0,
@@ -1387,6 +1420,7 @@ async function scLeerCitasDeFirebase(tel, cod){
 
 let scPlanCache = [];
 let scAvisosRechazo = [];
+let scEstudiosCache = [];
 let scOrtoData = { activa:false, porcentaje:0, faseTexto:'Fase 1: Alineación y nivelación' };
 
 function scObtenerCitas(){ return scCitasCache; }
@@ -1620,12 +1654,106 @@ async function scRenderCitas(){
       <div class="panel-sub">Con el Dr. Miguel Alvarado · Dentilike</div>
       ${cuerpo}
       <button class="btn-desvincular" onclick="scDesvincularCitas()">Desvincular este dispositivo</button>
-    </div>
-    ${scRenderOrtodoncia()}
-    ${scRenderPlanTratamiento()}`;
+    </div>`;
 
   scActualizarAvisoProximaCita();
 }
+
+// Pantalla "Mi Tratamiento" (sección propia)
+async function scRenderTratamiento(){
+  const cont = document.getElementById('tratamientoContenido');
+  if(!cont) return;
+  if(!scCitasVinculado()){
+    cont.innerHTML = `<div class="citas-vincular">
+      <div class="ico-big">🔒</div>
+      <h3>Primero vincula tu teléfono</h3>
+      <p>Para ver tu tratamiento necesitas vincular tu teléfono y código en la sección "Mis citas".</p>
+      <button class="btn-vincular" onclick="scIr('citas')">Ir a Mis citas</button>
+    </div>`;
+    return;
+  }
+  // asegurar datos cargados
+  const tel = localStorage.getItem('sc_citas_tel');
+  const cod = localStorage.getItem('sc_citas_codigo');
+  if(!scCitasCache.length && tel && cod){ await scLeerCitasDeFirebase(tel, cod); }
+
+  let html = scRenderPlanTratamiento();
+  if(scOrtoData && scOrtoData.activa){
+    html += scRenderOrtodoncia();
+    html += scRenderTipCuidado('brackets');
+  } else {
+    html += scRenderTipCuidado('higiene');
+  }
+  html += scRenderEstudios();
+  cont.innerHTML = html;
+}
+
+// Muestra los estudios/radiografías del paciente
+function scRenderEstudios(){
+  const estudios = scEstudiosCache || [];
+  if(!estudios.length) return '';
+  const items = estudios.map(es=>`
+    <div class="estudio-item" onclick="scVerEstudio('${es.url}','${(es.nombre||'').replace(/'/g,"\\'")}')">
+      <img src="${es.url}" alt="${es.nombre||'Estudio'}">
+      <div class="estudio-nombre">${es.nombre||'Estudio'}</div>
+    </div>`).join('');
+  return `<div class="estudios-panel">
+    <div class="estudios-head">🩻 Mis Estudios</div>
+    <div class="estudios-sub">Tus radiografías y estudios. Tócalos para verlos en grande.</div>
+    <div class="estudios-grid">${items}</div>
+  </div>`;
+}
+function scVerEstudio(url, nombre){
+  // visor simple: abre overlay con la imagen
+  let ov = document.getElementById('scEstudioVisor');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.id = 'scEstudioVisor';
+    ov.className = 'estudio-visor';
+    ov.onclick = ()=>{ ov.style.display='none'; };
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = `<div class="ev-inner"><div class="ev-nombre">${nombre}</div><img src="${url}"><div class="ev-cerrar">Toca para cerrar</div></div>`;
+  ov.style.display = 'flex';
+}
+
+
+// Tip corto y random según el tipo (brackets u higiene)
+const SC_TIPS_BRACKETS = [
+  'Evita chicles y caramelos pegajosos: pueden despegar un bracket.',
+  'Trae siempre tu cera de ortodoncia por si algo te roza.',
+  'Corta manzanas y zanahorias en trozos pequeños, no muerdas de frente.',
+  'Usa tu cepillo interdental entre bracket y bracket.',
+  'Si se despega un bracket, no te asustes: avísanos y lo revisamos.',
+  'Cepíllate después de cada comida, la comida se atora fácil.',
+  'Usa tus elásticos todo el tiempo indicado: aceleran tu tratamiento.',
+  'Evita morder cosas duras como hielo, plumas o uñas.',
+  'El hilo dental con enhebrador (Superfloss) es tu mejor aliado.',
+  'No faltes a tus ajustes: cada cita acorta tu tratamiento.'
+];
+const SC_TIPS_HIGIENE = [
+  'Cepíllate mínimo 2 veces al día, 2 minutos cada vez.',
+  'El cepillado de la noche es el más importante del día.',
+  'Usa hilo dental una vez al día para limpiar donde el cepillo no llega.',
+  'Cambia tu cepillo cada 3 meses o cuando las cerdas se abran.',
+  'Cepilla también tu lengua: ahí viven muchas bacterias.',
+  'Evita picar dulces todo el día: mantén tu boca en ácido menos tiempo.',
+  'El queso y las verduras crujientes ayudan a limpiar tus dientes.',
+  'Después de algo ácido o dulce, enjuágate con agua.',
+  'Visita al dentista cada 6 meses para una limpieza profesional.',
+  'Toma agua durante el día: ayuda a limpiar y proteger tus dientes.'
+];
+function scRenderTipCuidado(tipo){
+  const lista = tipo === 'brackets' ? SC_TIPS_BRACKETS : SC_TIPS_HIGIENE;
+  const dia = Math.floor(Date.now()/86400000);
+  const tip = lista[dia % lista.length];
+  const titulo = tipo === 'brackets' ? '😁 Tip para tus brackets' : '🪥 Tip de higiene';
+  return `<div class="tip-cuidado">
+    <div class="tc-ico">💡</div>
+    <div class="tc-txt"><b>${titulo}</b><span>${tip}</span></div>
+  </div>`;
+}
+
 
 // Muestra avisos de rechazo (solicitudes que el doctor no pudo confirmar)
 function scRenderAvisosRechazo(){
