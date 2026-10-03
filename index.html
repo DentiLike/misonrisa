@@ -685,8 +685,8 @@ async function scActivarNotificaciones(){
       alert('No activaste las notificaciones. Puedes hacerlo después desde el botón de inicio.');
       return false;
     }
-    // registrar el service worker de mensajería
-    const reg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+    // un SOLO service worker (sw.js): caché + push juntos
+    const reg = await scGetSwReg();
     const token = await scMessaging.getToken({ vapidKey: SC_VAPID_KEY, serviceWorkerRegistration: reg });
     if(!token){ alert('No se pudo generar el token de notificaciones. Intenta de nuevo.'); return false; }
     // guardar el token en el documento del paciente
@@ -697,10 +697,14 @@ async function scActivarNotificaciones(){
     const doc = await scDB.collection('citas_pacientes').doc(llave).get();
     const nombre = doc.exists ? (doc.data().nombre||'') : '';
     // guardamos el token en un array (por si el paciente usa varios dispositivos)
-    let tokens = (doc.exists && doc.data().pushTokens) ? doc.data().pushTokens : [];
+    let tokens = (doc.exists && Array.isArray(doc.data().pushTokens)) ? doc.data().pushTokens.slice() : [];
+    const viejo = localStorage.getItem('sc_push_token');
+    if(viejo && viejo !== token) tokens = tokens.filter(t => t !== viejo);   // no acumular tokens muertos
     if(!tokens.includes(token)) tokens.push(token);
+    if(tokens.length > 5) tokens = tokens.slice(-5);                          // máx. 5 dispositivos por paciente
     await scDB.collection('citas_pacientes').doc(llave).set({ nombre: nombre, pushTokens: tokens }, { merge:true });
     localStorage.setItem('sc_push_token', token);
+    localStorage.setItem('sc_push_renov_ts', String(Date.now()));
     localStorage.setItem('sc_push_activo','1');
     scActualizarBotonPush();
     alert('✅ ¡Listo! Ahora recibirás recordatorios de tus citas.');
@@ -710,6 +714,45 @@ async function scActivarNotificaciones(){
     alert('No pudimos activar las notificaciones. Revisa tu conexión e intenta de nuevo.');
     return false;
   }
+}
+
+// Devuelve el registro del ÚNICO service worker de la app (sw.js).
+async function scGetSwReg(){
+  const reg = await navigator.serviceWorker.register('sw.js');
+  await navigator.serviceWorker.ready;
+  return reg;
+}
+
+// Renueva/valida el token de ESTE dispositivo. Se llama al abrir la app (máx. 1 vez cada 6 h):
+//  - si Firebase rotó el token, reemplaza el viejo por el nuevo
+//  - si el servidor lo había limpiado de la lista, lo vuelve a registrar
+//  - solo escribe en Firestore cuando algo cambió
+async function scRenovarToken(forzar){
+  try{
+    if(!scPushSoportado() || !scFbOK) return;
+    if(Notification.permission !== 'granted') return;
+    if(localStorage.getItem('sc_push_activo') !== '1') return;
+    if(!scCitasVinculado()) return;
+    const ultima = parseInt(localStorage.getItem('sc_push_renov_ts') || '0', 10);
+    if(!forzar && (Date.now() - ultima) < 6*3600*1000) return;
+    const reg = await scGetSwReg();
+    const token = await scMessaging.getToken({ vapidKey: SC_VAPID_KEY, serviceWorkerRegistration: reg });
+    if(!token) return;
+    if(!scAuthListo) await scIniciarAuth();
+    const llave = await scHashLlave(localStorage.getItem('sc_citas_tel'), localStorage.getItem('sc_citas_codigo'));
+    const ref = scDB.collection('citas_pacientes').doc(llave);
+    const doc = await ref.get();
+    if(!doc.exists) return;
+    let tokens = Array.isArray(doc.data().pushTokens) ? doc.data().pushTokens.slice() : [];
+    const viejo = localStorage.getItem('sc_push_token');
+    let cambio = false;
+    if(viejo && viejo !== token && tokens.includes(viejo)){ tokens = tokens.filter(t => t !== viejo); cambio = true; }
+    if(!tokens.includes(token)){ tokens.push(token); cambio = true; }
+    if(tokens.length > 5){ tokens = tokens.slice(-5); cambio = true; }
+    if(cambio) await ref.update({ pushTokens: tokens });
+    localStorage.setItem('sc_push_token', token);
+    localStorage.setItem('sc_push_renov_ts', String(Date.now()));
+  }catch(e){ console.log('renovar token', e); }
 }
 
 async function scTogglePush(){
@@ -731,6 +774,7 @@ async function scDesactivarNotificaciones(){
       tokens = tokens.filter(t => t !== miToken);
       await scDB.collection('citas_pacientes').doc(llave).set({ nombre:nombre, pushTokens: tokens }, { merge:true });
     }
+    try{ await scMessaging.deleteToken(); }catch(e){}   // invalida el token en los servidores de FCM
     localStorage.removeItem('sc_push_token');
     localStorage.setItem('sc_push_activo','0');
     scActualizarBotonPush();
@@ -2195,6 +2239,10 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   if ('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
+    setTimeout(() => scRenovarToken(false), 3500);                       // al abrir la app
+    document.addEventListener('visibilitychange', () => {                 // al volver a ella
+      if(document.visibilityState === 'visible') scRenovarToken(false);
+    });
   }
 });
 </script>
