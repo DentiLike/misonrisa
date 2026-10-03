@@ -103,6 +103,16 @@ img{max-width:100%; display:block}
 .push-switch .ps-knob{position:absolute; top:3px; left:3px; width:23px; height:23px; background:#fff; border-radius:50%; transition:.2s; z-index:1; box-shadow:1px 1px 3px rgba(0,0,0,.25)}
 .push-switch input:checked ~ .ps-slider{background:var(--ok)}
 .push-switch input:checked ~ .ps-knob{left:26px}
+.prefs-card{background:#fff; border:1.5px solid var(--borde); border-radius:14px; padding:14px 16px; margin:8px 0 4px; box-shadow:var(--sombra)}
+.prefs-titulo{font-weight:700; color:var(--azul-osc); font-size:.9rem; margin-bottom:8px}
+.prefs-label{display:block; font-size:.78rem; color:var(--gris); margin:10px 0 5px}
+.prefs-fila{display:flex; align-items:center; gap:8px; font-size:.85rem; color:var(--gris)}
+.prefs-card select{flex:1; border:1.5px solid var(--borde); border-radius:10px; padding:10px 8px; font-size:.88rem; font-family:inherit; color:var(--azul-osc); background:#f8fafc}
+.btn-guardar-prefs{display:block; width:100%; margin-top:12px; background:var(--azul); color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:.9rem; cursor:pointer}
+.prefs-nota{font-size:.74rem; color:var(--gris); margin-top:8px; line-height:1.4}
+.solic-x{flex-shrink:0; align-self:flex-start; margin-left:auto; background:none; border:none; color:#a3a3a3; font-size:1rem; padding:2px 6px; cursor:pointer}
+.ag-whats{display:block; width:100%; background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:12px; padding:12px; font-weight:600; font-size:.88rem; margin-top:6px; cursor:pointer}
+.ag-whats.ag-suave{background:transparent; border-color:rgba(255,255,255,.2); color:rgba(255,255,255,.75); margin-top:10px}
 .btn-push-probar{display:block; width:100%; background:#eff6ff; color:var(--azul-osc); border:1.5px solid #bfdbfe; border-radius:12px; padding:11px; font-weight:600; font-size:.85rem; margin:0 0 4px; cursor:pointer}
 .btn-push.activo{background:#ecfdf5; color:var(--ok); border:1.5px solid #a7e3ca; box-shadow:none}
 .btn-push:active{transform:scale(.99)}
@@ -489,6 +499,19 @@ img{max-width:100%; display:block}
       </label>
     </div>
     <button class="btn-push-probar" id="scBtnProbar" style="display:none;" onclick="scProbarNotificacion()">🧪 Probar notificación</button>
+    <div class="prefs-card" id="scPrefsCard" style="display:none;">
+      <div class="prefs-titulo">⏰ ¿Cuándo quieres que te avisemos?</div>
+      <label class="prefs-label" for="scPrefDias">Primer aviso (te recordamos que se acerca tu cita)</label>
+      <div class="prefs-fila">
+        <select id="scPrefDias"></select>
+        <span>a las</span>
+        <select id="scPrefHora1"></select>
+      </div>
+      <label class="prefs-label" for="scPrefHora2">Segundo aviso, 1 día antes (para que confirmes tu cita), a las</label>
+      <div class="prefs-fila"><select id="scPrefHora2"></select></div>
+      <button class="btn-guardar-prefs" onclick="scGuardarPrefs()">Guardar</button>
+      <div class="prefs-nota" id="scPrefsNota">Si no eliges nada, te avisamos 2 días antes y 1 día antes, a las 9:00 AM.</div>
+    </div>
 
     <div class="install-banner" id="installBanner" style="display:none">
       <button class="cerrar" onclick="scOcultarBanner()">✕</button>
@@ -755,6 +778,52 @@ async function scRenovarToken(forzar){
   }catch(e){ console.log('renovar token', e); }
 }
 
+// ----- Preferencias de avisos (cuándo y cuántos días antes) -----
+function scLlenarSelectsPrefs(){
+  const horas = [];
+  for(let h = 7; h <= 21; h++) horas.push(h);
+  const opts = horas.map(h => `<option value="${h}">${scHoraAmPm(String(h).padStart(2,'0') + ':00')}</option>`).join('');
+  ['scPrefHora1','scPrefHora2'].forEach(id => { const el = document.getElementById(id); if(el){ el.innerHTML = opts; el.value = '9'; } });
+  const d = document.getElementById('scPrefDias');
+  if(d){ d.innerHTML = '<option value="3">3 días antes</option><option value="2">2 días antes</option>'; d.value = '2'; }
+}
+let scPrefsCargadas = false;
+async function scCargarPrefs(){
+  if(scPrefsCargadas) return;
+  try{
+    const tel = localStorage.getItem('sc_citas_tel'), cod = localStorage.getItem('sc_citas_codigo');
+    if(!tel || !cod || !scFbOK) return;
+    if(!scAuthListo) await scIniciarAuth();
+    const llave = await scHashLlave(tel, cod);
+    const doc = await scDB.collection('citas_pacientes').doc(llave).get();
+    const p = (doc.exists && doc.data().prefs) || {};
+    const ok = (v) => Number.isInteger(v) && v >= 7 && v <= 21;
+    document.getElementById('scPrefDias').value = p.diasAntes === 3 ? '3' : '2';
+    document.getElementById('scPrefHora1').value = String(ok(p.hora1) ? p.hora1 : 9);
+    document.getElementById('scPrefHora2').value = String(ok(p.hora2) ? p.hora2 : 9);
+    scPrefsCargadas = true;
+  }catch(e){ console.log('cargar prefs', e); }
+}
+async function scGuardarPrefs(){
+  const nota = document.getElementById('scPrefsNota');
+  try{
+    const tel = localStorage.getItem('sc_citas_tel'), cod = localStorage.getItem('sc_citas_codigo');
+    if(!tel || !cod){ alert('Primero vincula tu teléfono en "Mi Salud".'); return; }
+    const prefs = {
+      diasAntes: parseInt(document.getElementById('scPrefDias').value, 10) === 3 ? 3 : 2,
+      hora1: parseInt(document.getElementById('scPrefHora1').value, 10),
+      hora2: parseInt(document.getElementById('scPrefHora2').value, 10)
+    };
+    if(!scAuthListo) await scIniciarAuth();
+    const llave = await scHashLlave(tel, cod);
+    await scDB.collection('citas_pacientes').doc(llave).update({ prefs: prefs });
+    if(nota) nota.textContent = '✓ Guardado. Te avisaremos como elegiste.';
+  }catch(e){
+    console.error('guardar prefs', e);
+    if(nota) nota.textContent = 'No se pudo guardar. Revisa tu internet e intenta de nuevo.';
+  }
+}
+
 async function scTogglePush(){
   const sw = document.getElementById('scPushSwitch');
   if(sw.checked){ await scActivarNotificaciones(); }
@@ -804,6 +873,8 @@ function scActualizarBotonPush(){
   }
   const bp = document.getElementById('scBtnProbar');
   if(bp) bp.style.display = activo ? 'block' : 'none';
+  const pc = document.getElementById('scPrefsCard');
+  if(pc){ pc.style.display = activo ? 'block' : 'none'; if(activo) scCargarPrefs(); }
 }
 function scActualizarBotonPush_viejo(){
   const b = document.getElementById('btnPush');
@@ -1274,6 +1345,8 @@ function scHorarioPorDefecto(){
 let scAgFechaSel = '';
 let scAgHoraSel = '';
 let scAgMotivoSel = '';
+let scModoReagendar = null;        // si no es null, la pantalla de agendar está en modo "cambiar una cita"
+let scModoReagendarFresco = false;
 let scAgCalMes = new Date().getMonth();   // mes que muestra el calendario
 let scAgCalAnio = new Date().getFullYear();
 
@@ -1288,9 +1361,13 @@ async function scRenderAgendar(){
     </div>`;
     return;
   }
+  // el modo "cambiar cita" solo vale si venimos del botón "Necesito reagendar"
+  if(!scModoReagendarFresco) scModoReagendar = null;
+  scModoReagendarFresco = false;
+  const modo = scModoReagendar;
   cont.innerHTML = `<div class="agendar-panel"><div class="panel-head">Cargando…</div></div>`;
   const horarios = await scCargarHorarios();
-  scAgFechaSel = ''; scAgHoraSel = ''; scAgMotivoSel = '';
+  scAgFechaSel = ''; scAgHoraSel = ''; scAgMotivoSel = modo ? modo.motivo : '';
   // calendario arranca en el mes actual
   scAgCalMes = new Date().getMonth();
   scAgCalAnio = new Date().getFullYear();
@@ -1301,8 +1378,8 @@ async function scRenderAgendar(){
 
   cont.innerHTML = `
     <div class="agendar-panel">
-      <div class="panel-head">Pide tu cita</div>
-      <div class="panel-sub">${nombreClinica} · ${nombreDoctor}</div>
+      <div class="panel-head">${modo ? 'Cambiar tu cita' : 'Pide tu cita'}</div>
+      <div class="panel-sub">${modo ? scTextoCitaActual(modo) : (nombreClinica + ' · ' + nombreDoctor)}</div>
 
       <div class="ag-label">📅 Elige el día</div>
       <div class="ag-cal" id="agCal"></div>
@@ -1310,11 +1387,19 @@ async function scRenderAgendar(){
       <div class="ag-label">🕐 ¿A qué hora?</div>
       <div class="ag-chips" id="agChipsHora"><div class="ag-hint">Primero elige un día 👆</div></div>
 
+      ${modo ? `
+      <div class="ag-label">⏳ ¿Necesitas un horario especial?</div>
+      <button class="ag-whats" onclick="scReagendarPorWhatsApp('${modo.citaId}')">💬 Escribirle al Dr. Miguel por WhatsApp</button>
+      ` : `
       <div class="ag-label">📝 Motivo de tu cita</div>
       <div class="ag-chips" id="agChipsMotivo">${chipsMotivo}</div>
+      `}
 
-      <button class="ag-enviar" id="agBtnEnviar" onclick="scEnviarSolicitud()">Enviar solicitud</button>
-      <div class="ag-nota">Tu cita no queda agendada hasta que el Dr. Miguel la confirme. Cuando la acepte aparecerá en "Mis citas".</div>
+      <button class="ag-enviar" id="agBtnEnviar" onclick="scEnviarSolicitud()">${modo ? 'Enviar solicitud de cambio' : 'Enviar solicitud'}</button>
+      ${modo
+        ? `<div class="ag-nota">Tu cita actual sigue apartada hasta que el Dr. Miguel acepte el cambio. Te avisaremos cuando responda.</div>
+           <button class="ag-whats ag-suave" onclick="scModoReagendar=null; scIr('citas')">Mejor no cambiarla</button>`
+        : `<div class="ag-nota">Tu cita no queda agendada hasta que el Dr. Miguel la confirme. Cuando la acepte aparecerá en "Mis citas".</div>`}
     </div>`;
   scRenderCalendario();
 }
@@ -1402,6 +1487,10 @@ function scAgPickMotivo(m){
 }
 
 // calcula horaFin = horaInicio + 30 min (el doctor la ajusta al aceptar)
+function scTextoCitaActual(modo){
+  const f = scFechaLegible(modo.fechaOriginal);
+  return `Cita actual: ${f.diaSemana} ${f.dia} de ${f.mes} · ${scHoraAmPm(modo.horaOriginal)}`;
+}
 function scMasMediaHora(hhmm){
   let [h,m] = hhmm.split(':').map(Number);
   m += 30;
@@ -1411,12 +1500,16 @@ function scMasMediaHora(hhmm){
 
 async function scEnviarSolicitud(){
   if(scAgendarEnviando) return;
+  const modo = scModoReagendar;
   const fecha = scAgFechaSel;
   const horaInicio = scAgHoraSel;
-  const motivo = scAgMotivoSel;
-  if(!fecha){ alert('Elige un día para tu cita.'); return; }
-  if(!horaInicio){ alert('Elige una hora para tu cita.'); return; }
+  const motivo = modo ? modo.motivo : scAgMotivoSel;
+  if(!fecha){ alert(modo ? 'Elige el nuevo día para tu cita.' : 'Elige un día para tu cita.'); return; }
+  if(!horaInicio){ alert(modo ? 'Elige la nueva hora para tu cita.' : 'Elige una hora para tu cita.'); return; }
   if(!motivo){ alert('Elige el motivo de tu cita.'); return; }
+  if(modo && fecha === modo.fechaOriginal && horaInicio === modo.horaOriginal){
+    alert('Elegiste el mismo día y hora de tu cita actual. Elige otro horario.'); return;
+  }
 
   const tel = localStorage.getItem('sc_citas_tel');
   const cod = localStorage.getItem('sc_citas_codigo');
@@ -1437,7 +1530,7 @@ async function scEnviarSolicitud(){
   if(btn){ btn.textContent = 'Enviando…'; btn.disabled = true; }
 
   try{
-    await scDB.collection('solicitudes').add({
+    const datos = {
       nombre: nombre,
       telefono: tel,
       codigoPaciente: cod,
@@ -1447,27 +1540,37 @@ async function scEnviarSolicitud(){
       motivo: motivo,
       estado: 'pendiente',
       fechaCreacion: Date.now()
-    });
+    };
+    if(modo){
+      datos.tipo = 'reagendar';
+      datos.citaId = modo.citaId;
+      datos.fechaOriginal = modo.fechaOriginal;
+      datos.horaOriginal = modo.horaOriginal;
+    }
+    await scDB.collection('solicitudes').add(datos);
     // guardar marca local de solicitud pendiente (para mostrar estado al paciente)
     const pendientes = JSON.parse(localStorage.getItem('sc_solicitudes_pend')||'[]');
-    pendientes.push({ fecha, hora:horaInicio, motivo, enviada:Date.now() });
+    pendientes.push(modo
+      ? { fecha, hora:horaInicio, motivo, enviada:Date.now(), tipo:'reagendar', citaId:modo.citaId, fechaOriginal:modo.fechaOriginal, horaOriginal:modo.horaOriginal }
+      : { fecha, hora:horaInicio, motivo, enviada:Date.now() });
     localStorage.setItem('sc_solicitudes_pend', JSON.stringify(pendientes));
+    scModoReagendar = null;
     // mostrar confirmación
     const f = scFechaLegible(fecha);
     document.getElementById('agendarContenido').innerHTML = `
       <div class="agendar-panel" style="text-align:center;">
         <div style="font-size:3rem; margin-bottom:8px;">✅</div>
-        <div class="panel-head">¡Solicitud enviada!</div>
+        <div class="panel-head">${modo ? '¡Solicitud de cambio enviada!' : '¡Solicitud enviada!'}</div>
         <div style="color:rgba(255,255,255,.9); font-size:.9rem; margin:12px 0; line-height:1.5;">
-          Pediste tu cita para el <b>${f.diaSemana} ${f.dia} de ${f.mes}</b> a las <b>${scHoraAmPm(horaInicio)}</b>.<br><br>
-          El Dr. Miguel la revisará y la confirmará. Cuando la acepte, aparecerá en <b>"Mis citas"</b>. Te avisaremos.
+          ${modo ? 'Pediste mover tu cita al' : 'Pediste tu cita para el'} <b>${f.diaSemana} ${f.dia} de ${f.mes}</b> a las <b>${scHoraAmPm(horaInicio)}</b>.<br><br>
+          ${modo ? 'Tu cita actual sigue apartada mientras el Dr. Miguel revisa tu solicitud. Te avisaremos.' : 'El Dr. Miguel la revisará y la confirmará. Cuando la acepte, aparecerá en <b>"Mis citas"</b>. Te avisaremos.'}
         </div>
         <button class="btn-vincular" onclick="scIr('citas')">Ver Mis citas</button>
       </div>`;
   }catch(e){
     console.error('enviar solicitud error', e);
     alert('No pudimos enviar tu solicitud. Revisa tu internet e intenta de nuevo. Si sigue fallando, contáctanos por WhatsApp.');
-    if(btn){ btn.textContent = 'Enviar solicitud'; btn.disabled = false; }
+    if(btn){ btn.textContent = modo ? 'Enviar solicitud de cambio' : 'Enviar solicitud'; btn.disabled = false; }
   }
   scAgendarEnviando = false;
 }
@@ -1591,6 +1694,27 @@ async function scConfirmarCita(id){
 }
 
 async function scReagendarCita(id){
+  const cita = (scCitasCache || []).find(c => String(c.id) === String(id));
+  if(!cita || !cita.fechaISO || !cita.hora){ return scReagendarPorWhatsApp(id); }
+  // ¿ya hay una solicitud de cambio esperando respuesta para esta cita?
+  const pend = JSON.parse(localStorage.getItem('sc_solicitudes_pend')||'[]');
+  if(pend.some(p => p.tipo === 'reagendar' && String(p.citaId) === String(cita.id))){
+    alert('Ya enviaste una solicitud de cambio para esta cita. Espera la respuesta del Dr. Miguel, o escríbele por WhatsApp si es urgente.');
+    return;
+  }
+  // faltan menos de 24 horas: solo por WhatsApp
+  const faltan = new Date(`${cita.fechaISO}T${cita.hora}:00`).getTime() - Date.now();
+  if(faltan < 24*3600*1000){
+    alert('Tu cita es en menos de 24 horas. Para cambiarla, escríbele directamente al Dr. Miguel por WhatsApp.');
+    return scReagendarPorWhatsApp(id);
+  }
+  scModoReagendar = { citaId: String(cita.id), fechaOriginal: cita.fechaISO, horaOriginal: cita.hora, motivo: cita.motivo || 'Ajuste' };
+  scModoReagendarFresco = true;
+  scIr('agendar');
+}
+
+// Reagendar por WhatsApp (horarios especiales o citas en menos de 24 h)
+async function scReagendarPorWhatsApp(id){
   const propuesta = prompt('¿Qué día y hora te acomodaría mejor? (Ej: "martes por la tarde" o "15 de oct a las 5pm")\n\nEl Dr. Miguel revisará su agenda y te confirma.');
   if(propuesta === null) return; // canceló el prompt
   const tel = localStorage.getItem('sc_citas_tel');
@@ -1908,12 +2032,17 @@ function scRenderAvisosRechazo(){
   if(!avisos.length) return '';
   return avisos.map(a=>{
     const f = scFechaLegible(a.fecha);
+    const esReag = a.tipo === 'reagendar';
+    const titulo = esReag ? 'No pudimos mover tu cita' : 'Tu solicitud necesita ajustarse';
+    const texto = esReag
+      ? `No fue posible cambiar tu cita al ${f.diaSemana} ${f.dia} de ${f.mes} a las ${scHoraAmPm(a.hora)}. Tu cita original sigue en pie. El Dr. Miguel te contactará para buscar otro horario. 💙`
+      : `La cita que pediste para el ${f.diaSemana} ${f.dia} de ${f.mes} a las ${scHoraAmPm(a.hora)} necesita ajustarse. Te contactaremos para buscar un mejor horario. También puedes pedir otra fecha. 💙`;
     return `<div class="aviso-rechazo">
       <button class="ar-x" onclick="scCerrarAvisoRechazo('${a.id}')">✕</button>
       <div class="ar-ico">📋</div>
       <div class="ar-txt">
-        <b>Tu solicitud necesita ajustarse</b>
-        <span>La cita que pediste para el ${f.diaSemana} ${f.dia} de ${f.mes} a las ${scHoraAmPm(a.hora)} necesita ajustarse. Te contactaremos para buscar un mejor horario. También puedes pedir otra fecha. 💙</span>
+        <b>${titulo}</b>
+        <span>${texto}</span>
       </div>
     </div>`;
   }).join('');
@@ -1936,32 +2065,65 @@ async function scCerrarAvisoRechazo(idAviso){
 }
 
 // Muestra solicitudes pendientes; si la cita ya existe en las citas reales, la quita (fue aceptada)
+function scHoyLocalISO(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+// Depura la lista de solicitudes pendientes. Quita las que ya no tienen sentido:
+//  - ya son una cita real (mismo día Y hora)      - el doctor la rechazó (llegó el aviso)
+//  - ya pasó el día que se pidió                  - tienen más de 30 días
+//  - reagendar: la cita original ya cambió de día/hora (se aceptó) o ya no existe
+function scDepurarPendientes(pendientes, citasReales, avisos, hoyISO, ahora){
+  const reales = citasReales || [];
+  return (pendientes || []).filter(p => {
+    const aceptada = reales.some(c => c.fechaISO === p.fecha && c.hora === p.hora);
+    const rechazada = (avisos || []).some(a => a.fecha === p.fecha && a.hora === p.hora);
+    const pasada = !!p.fecha && p.fecha < hoyISO;
+    const vieja = (ahora - (p.enviada || 0)) > 30*86400000;
+    let resuelta = false;
+    if(p.tipo === 'reagendar' && reales.length){
+      const orig = reales.find(c => String(c.id) === String(p.citaId));
+      resuelta = !orig || orig.fechaISO !== p.fechaOriginal || orig.hora !== p.horaOriginal;
+    }
+    return !(aceptada || rechazada || pasada || vieja || resuelta);
+  });
+}
+function scQuitarPendiente(enviada){
+  const lista = JSON.parse(localStorage.getItem('sc_solicitudes_pend')||'[]').filter(p => String(p.enviada) !== String(enviada));
+  localStorage.setItem('sc_solicitudes_pend', JSON.stringify(lista));
+  scRenderCitas();
+}
+// Muestra solicitudes pendientes (ya depuradas)
 function scRenderSolicitudesPendientes(citasReales){
   let pendientes = JSON.parse(localStorage.getItem('sc_solicitudes_pend')||'[]');
   if(!pendientes.length) return '';
-  // limpiar las que ya aparecen en citas reales (aceptadas) o muy viejas (>30 días)
-  const ahora = Date.now();
-  pendientes = pendientes.filter(p=>{
-    const yaEsCita = (citasReales||[]).some(c => c.fechaISO === p.fecha && (c.hora===p.hora || true));
-    const vieja = (ahora - (p.enviada||0)) > 30*86400000;
-    return !yaEsCita && !vieja;
-  });
+  pendientes = scDepurarPendientes(pendientes, citasReales, scAvisosRechazo, scHoyLocalISO(), Date.now());
   localStorage.setItem('sc_solicitudes_pend', JSON.stringify(pendientes));
   if(!pendientes.length) return '';
   const items = pendientes.map(p=>{
     const f = scFechaLegible(p.fecha);
+    let titulo, detalle;
+    if(p.tipo === 'reagendar'){
+      const fo = scFechaLegible(p.fechaOriginal);
+      titulo = `🔁 Cambio de cita: ${f.diaSemana} ${f.dia} de ${f.mes} · ${scHoraAmPm(p.hora)}`;
+      detalle = `Tu cita actual (${fo.diaSemana} ${fo.dia} de ${fo.mes} · ${scHoraAmPm(p.horaOriginal)}) sigue apartada. Esperando respuesta del Dr. Miguel`;
+    } else {
+      titulo = `${f.diaSemana} ${f.dia} de ${f.mes} · ${scHoraAmPm(p.hora)}`;
+      detalle = `${p.motivo} — Esperando confirmación del Dr. Miguel`;
+    }
     return `<div class="solic-item">
       <div class="solic-ico">⏳</div>
       <div class="solic-txt">
-        <b>${f.diaSemana} ${f.dia} de ${f.mes} · ${scHoraAmPm(p.hora)}</b>
-        <span>${p.motivo} — Esperando confirmación del Dr. Miguel</span>
+        <b>${titulo}</b>
+        <span>${detalle}</span>
       </div>
+      <button class="solic-x" title="Quitar de la lista" onclick="scQuitarPendiente('${p.enviada}')">✕</button>
     </div>`;
   }).join('');
   return `<div class="solic-panel">
     <div class="solic-head">📨 Solicitudes pendientes</div>
     ${items}
-    <div class="solic-nota">Cuando el Dr. Miguel acepte tu solicitud, tu cita aparecerá abajo en "Tus próximas citas".</div>
+    <div class="solic-nota">Cuando el Dr. Miguel responda, aquí se actualizará. Puedes quitar una con la ✕.</div>
   </div>`;
 }
 
@@ -2222,6 +2384,7 @@ window.addEventListener('DOMContentLoaded', () => {
   scActualizarBannerInstalar();
   scIniciarAuth(); // login anónimo de Firebase para leer citas
   scRenderCitas(); // actualiza el resumen de citas en el home
+  scLlenarSelectsPrefs();
   scActualizarBotonPush(); // estado del botón de notificaciones
   // punto de sincronización según internet
   scSetSync(navigator.onLine && scFbOK);
