@@ -113,6 +113,22 @@ img{max-width:100%; display:block}
 .solic-x{flex-shrink:0; align-self:flex-start; margin-left:auto; background:none; border:none; color:#a3a3a3; font-size:1rem; padding:2px 6px; cursor:pointer}
 .ag-whats{display:block; width:100%; background:rgba(255,255,255,.14); color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:12px; padding:12px; font-weight:600; font-size:.88rem; margin-top:6px; cursor:pointer}
 .ag-whats.ag-suave{background:transparent; border-color:rgba(255,255,255,.2); color:rgba(255,255,255,.75); margin-top:10px}
+.sc-toast{position:fixed; left:50%; bottom:92px; transform:translate(-50%,16px); background:#1e293b; color:#fff; padding:11px 18px; border-radius:12px; font-size:.88rem; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:9000; max-width:88vw; text-align:center}
+.sc-toast.visible{opacity:1; transform:translate(-50%,0)}
+.sc-cancel-overlay{display:none; position:fixed; inset:0; z-index:9500; background:rgba(15,23,42,.55); align-items:center; justify-content:center; padding:18px}
+.sc-cancel-box{background:#fff; border-radius:20px; padding:22px 20px; width:100%; max-width:380px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.scb-ico{width:46px; height:46px; margin:0 auto 8px; border-radius:50%; background:#dcfce7; color:#166534; font-size:1.5rem; line-height:46px; font-weight:700}
+.scb-tit{font-weight:700; font-size:1.05rem; color:var(--azul-osc)}
+.scb-sub{font-size:.84rem; color:var(--gris); margin:4px 0 14px; line-height:1.4}
+.scb-label{display:block; text-align:left; font-size:.78rem; color:var(--gris); margin-bottom:6px}
+.sc-cancel-box textarea{width:100%; border:1.5px solid var(--borde); border-radius:12px; padding:10px; font-family:inherit; font-size:.88rem; resize:none; box-sizing:border-box}
+.scb-enviar{display:block; width:100%; margin-top:10px; background:#25D366; color:#fff; border:none; border-radius:12px; padding:12px; font-weight:700; font-size:.9rem; cursor:pointer}
+.scb-enviar:disabled{background:#e2e8f0; color:#94a3b8; cursor:default}
+.scb-otra{display:block; width:100%; margin-top:8px; background:#fff; color:var(--azul-osc); border:1.5px solid var(--borde); border-radius:12px; padding:11px; font-weight:600; font-size:.88rem; cursor:pointer}
+.scb-cerrar{display:block; width:100%; margin-top:6px; background:none; border:none; color:var(--gris); padding:10px; font-size:.88rem; cursor:pointer}
+.cita-cancelada{opacity:.72}
+.cita-estado.cancelada{background:#fee2e2; color:#991b1b}
+.cita-cancelada-nota{font-size:.82rem; color:var(--gris); margin:6px 0}
 .btn-push-probar{display:block; width:100%; background:#eff6ff; color:var(--azul-osc); border:1.5px solid #bfdbfe; border-radius:12px; padding:11px; font-weight:600; font-size:.85rem; margin:0 0 4px; cursor:pointer}
 .btn-push.activo{background:#ecfdf5; color:var(--ok); border:1.5px solid #a7e3ca; box-shadow:none}
 .btn-push:active{transform:scale(.99)}
@@ -1397,7 +1413,7 @@ async function scRenderAgendar(){
 
       <button class="ag-enviar" id="agBtnEnviar" onclick="scEnviarSolicitud()">${modo ? 'Enviar solicitud de cambio' : 'Enviar solicitud'}</button>
       ${modo
-        ? `<div class="ag-nota">Tu cita actual sigue apartada hasta que el Dr. Miguel acepte el cambio. Te avisaremos cuando responda.</div>
+        ? `<div class="ag-nota">Tu cita actual sigue apartada hasta que el Dr. Miguel acepte el cambio.${modo.pronto ? ' Tu cita es en menos de 24 horas: si es urgente, escríbele por WhatsApp.' : ''}</div>
            <button class="ag-whats ag-suave" onclick="scModoReagendar=null; scIr('citas')">Mejor no cambiarla</button>`
         : `<div class="ag-nota">Tu cita no queda agendada hasta que el Dr. Miguel la confirme. Cuando la acepte aparecerá en "Mis citas".</div>`}
     </div>`;
@@ -1563,7 +1579,7 @@ async function scEnviarSolicitud(){
         <div class="panel-head">${modo ? '¡Solicitud de cambio enviada!' : '¡Solicitud enviada!'}</div>
         <div style="color:rgba(255,255,255,.9); font-size:.9rem; margin:12px 0; line-height:1.5;">
           ${modo ? 'Pediste mover tu cita al' : 'Pediste tu cita para el'} <b>${f.diaSemana} ${f.dia} de ${f.mes}</b> a las <b>${scHoraAmPm(horaInicio)}</b>.<br><br>
-          ${modo ? 'Tu cita actual sigue apartada mientras el Dr. Miguel revisa tu solicitud. Te avisaremos.' : 'El Dr. Miguel la revisará y la confirmará. Cuando la acepte, aparecerá en <b>"Mis citas"</b>. Te avisaremos.'}
+          ${modo ? 'Tu cita actual sigue apartada mientras el Dr. Miguel revisa tu solicitud.' : 'El Dr. Miguel la revisará y la confirmará. Cuando la acepte, aparecerá en <b>"Mis citas"</b>. Te avisaremos.'}
         </div>
         <button class="btn-vincular" onclick="scIr('citas')">Ver Mis citas</button>
       </div>`;
@@ -1664,33 +1680,59 @@ function scHoraAmPm(hora){
   return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
 }
 
-async function scConfirmarCita(id){
+// ----- Estado de la cita -----
+function scEsCancelada(estado){ return estado === 'status-red' || estado === 'cancelada'; }
+
+// Aviso breve que no estorba (reemplaza a las ventanas emergentes)
+function scToast(msg){
+  let t = document.getElementById('scToast');
+  if(!t){ t = document.createElement('div'); t.id = 'scToast'; t.className = 'sc-toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('visible');
+  clearTimeout(scToast._t);
+  scToast._t = setTimeout(() => t.classList.remove('visible'), 3200);
+}
+
+function scMensajeErrorCita(e){
+  const m = String((e && e.message) || e || '');
+  if(m.includes('cita-no-existe')) return 'Esta cita ya no aparece en la agenda. Toca 🔄 para actualizar la pantalla.';
+  return 'No pudimos guardar el cambio. Revisa tu internet e intenta de nuevo.';
+}
+
+// Guarda el nuevo estado de UNA cita en la nube, sin pisar el resto. Devuelve el nombre del paciente.
+async function scGuardarEstadoCita(id, estado){
   const tel = localStorage.getItem('sc_citas_tel');
   const cod = localStorage.getItem('sc_citas_codigo');
+  if(!scFbOK || !tel || !cod) throw new Error('sin-conexion');
+  if(!scAuthListo) await scIniciarAuth();
+  const llave = await scHashLlave(tel, cod);
+  const ref = scDB.collection('citas_pacientes').doc(llave);
+  return await scDB.runTransaction(async (t) => {
+    const snap = await t.get(ref);
+    if(!snap.exists) throw new Error('sin-documento');
+    const lista = Array.isArray(snap.data().citas) ? snap.data().citas : [];
+    if(!lista.some(c => String(c.id) === String(id))) throw new Error('cita-no-existe');
+    t.update(ref, { citas: lista.map(c => String(c.id) === String(id) ? Object.assign({}, c, { estado: estado }) : c) });
+    return snap.data().nombre || '';
+  });
+}
+
+// Confirmar: se guarda y al doctor le llega el botón verde y su aviso. Ya no se abre WhatsApp.
+async function scConfirmarCita(id){
   const cita = scCitasCache.find(c => String(c.id) === String(id));
-  if(cita) cita.estado = 'status-green';
-  let nombrePaciente = '';
-  // Guardar de vuelta en la nube
-  if(scFbOK && tel && cod){
-    try{
-      if(!scAuthListo) await scIniciarAuth();
-      const llave = await scHashLlave(tel, cod);
-      const doc = await scDB.collection('citas_pacientes').doc(llave).get();
-      nombrePaciente = doc.exists ? (doc.data().nombre||'') : '';
-      await scDB.collection('citas_pacientes').doc(llave).set({
-        nombre: nombrePaciente,
-        citas: scCitasCache
-      }, { merge:true });
-    }catch(e){ console.error('confirmar error', e); }
-  }
-  // Avisar al doctor por WhatsApp
-  const c = cita ? scFechaLegible(cita.fechaISO) : null;
-  const quien = nombrePaciente ? `Soy ${nombrePaciente}. ` : '';
-  const msg = c
-    ? `Hola Dr. Miguel. ${quien}✅ Confirmo mi asistencia a la cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${scHoraAmPm(cita.hora)} (${cita.motivo}).`
-    : `Hola Dr. Miguel. ${quien}Confirmo mi cita.`;
-  window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
+  if(!cita) return;
+  const anterior = cita.estado;
+  cita.estado = 'status-green';
   scRenderCitas();
+  try{
+    await scGuardarEstadoCita(id, 'status-green');
+    scToast('✓ Cita confirmada. ¡Gracias!');
+  }catch(e){
+    console.error('confirmar error', e);
+    cita.estado = anterior;          // no se guardó: se deshace para no engañar al paciente
+    scRenderCitas();
+    alert(scMensajeErrorCita(e));
+  }
 }
 
 async function scReagendarCita(id){
@@ -1702,13 +1744,8 @@ async function scReagendarCita(id){
     alert('Ya enviaste una solicitud de cambio para esta cita. Espera la respuesta del Dr. Miguel, o escríbele por WhatsApp si es urgente.');
     return;
   }
-  // faltan menos de 24 horas: solo por WhatsApp
   const faltan = new Date(`${cita.fechaISO}T${cita.hora}:00`).getTime() - Date.now();
-  if(faltan < 24*3600*1000){
-    alert('Tu cita es en menos de 24 horas. Para cambiarla, escríbele directamente al Dr. Miguel por WhatsApp.');
-    return scReagendarPorWhatsApp(id);
-  }
-  scModoReagendar = { citaId: String(cita.id), fechaOriginal: cita.fechaISO, horaOriginal: cita.hora, motivo: cita.motivo || 'Ajuste' };
+  scModoReagendar = { citaId: String(cita.id), fechaOriginal: cita.fechaISO, horaOriginal: cita.hora, motivo: cita.motivo || 'Ajuste', pronto: faltan < 24*3600*1000 };
   scModoReagendarFresco = true;
   scIr('agendar');
 }
@@ -1738,29 +1775,63 @@ async function scReagendarPorWhatsApp(id){
   window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
+// Cancelar: se guarda (al doctor le sale el punto rojo y le llega su aviso). El mensaje por WhatsApp es opcional.
+let scCancelCitaActual = null, scCancelNombre = '';
 async function scCancelarCita(id){
-  if(!confirm('¿Seguro que necesitas cancelar esta cita? Le avisaremos al Dr. Miguel por WhatsApp.')) return;
-  const propuesta = prompt('Si quieres reprogramarla, ¿qué día y hora te acomodaría?\n(Déjalo vacío si solo quieres cancelar sin nueva fecha)');
-  // si le da cancelar al prompt (null), igual seguimos con cancelación simple
-  const tel = localStorage.getItem('sc_citas_tel');
-  const cod = localStorage.getItem('sc_citas_codigo');
   const cita = scCitasCache.find(c => String(c.id) === String(id));
-  let nombrePaciente = '';
-  if(scFbOK && tel && cod){
-    try{
-      if(!scAuthListo) await scIniciarAuth();
-      const llave = await scHashLlave(tel, cod);
-      const doc = await scDB.collection('citas_pacientes').doc(llave).get();
-      nombrePaciente = doc.exists ? (doc.data().nombre||'') : '';
-    }catch(e){ console.error('cancelar lookup error', e); }
+  if(!cita) return;
+  if(!confirm('¿Seguro que quieres cancelar esta cita?')) return;
+  const anterior = cita.estado;
+  cita.estado = 'status-red';
+  scRenderCitas();
+  try{
+    scCancelNombre = await scGuardarEstadoCita(id, 'status-red');
+  }catch(e){
+    console.error('cancelar error', e);
+    cita.estado = anterior;
+    scRenderCitas();
+    alert(scMensajeErrorCita(e));
+    return;
   }
-  const c = cita ? scFechaLegible(cita.fechaISO) : null;
-  const quien = nombrePaciente ? `Soy ${nombrePaciente}. ` : '';
-  const prop = (propuesta && propuesta.trim()) ? ` Si es posible, me gustaría reprogramarla para: ${propuesta.trim()}.` : '';
-  const msg = c
-    ? `Hola Dr. Miguel. ${quien}❌ Necesito cancelar mi cita del ${c.diaSemana} ${c.dia} de ${c.mes} a las ${scHoraAmPm(cita.hora)} (${cita.motivo}).${prop}`
-    : `Hola Dr. Miguel. ${quien}Necesito cancelar mi cita.${prop}`;
+  scPanelPostCancelacion(cita);
+}
+function scPanelPostCancelacion(cita){
+  let ov = document.getElementById('scCancelOverlay');
+  if(!ov){ ov = document.createElement('div'); ov.id = 'scCancelOverlay'; ov.className = 'sc-cancel-overlay'; document.body.appendChild(ov); }
+  const f = scFechaLegible(cita.fechaISO);
+  ov.innerHTML = `<div class="sc-cancel-box">
+      <div class="scb-ico">✓</div>
+      <div class="scb-tit">Tu cita fue cancelada</div>
+      <div class="scb-sub">${f.diaSemana} ${f.dia} de ${f.mes} · ${scHoraAmPm(cita.hora)}. El Dr. Miguel ya lo sabe.</div>
+      <label class="scb-label" for="scCancelMsg">Si quieres, cuéntale el motivo o cuándo te gustaría reprogramar (opcional)</label>
+      <textarea id="scCancelMsg" rows="3" placeholder="Déjalo en blanco si no quieres enviar nada" oninput="scActualizarBtnCancelMsg()"></textarea>
+      <button class="scb-enviar" id="scCancelEnviar" disabled onclick="scEnviarMensajeCancelacion()">💬 Enviar por WhatsApp</button>
+      <button class="scb-otra" onclick="scCerrarPanelCancelacion(); scIr('agendar')">📅 Elegir otra fecha</button>
+      <button class="scb-cerrar" onclick="scCerrarPanelCancelacion()">Listo</button>
+    </div>`;
+  scCancelCitaActual = cita;
+  ov.style.display = 'flex';
+}
+function scActualizarBtnCancelMsg(){
+  const t = document.getElementById('scCancelMsg'), b = document.getElementById('scCancelEnviar');
+  if(b) b.disabled = !(t && t.value.trim());
+}
+function scEnviarMensajeCancelacion(){
+  const t = document.getElementById('scCancelMsg');
+  const texto = t ? t.value.trim() : '';
+  const cita = scCancelCitaActual;
+  if(!texto || !cita) return;
+  const f = scFechaLegible(cita.fechaISO);
+  const quien = scCancelNombre ? `Soy ${scCancelNombre}. ` : '';
+  const msg = `Hola Dr. Miguel. ${quien}❌ Cancelé mi cita del ${f.diaSemana} ${f.dia} de ${f.mes} a las ${scHoraAmPm(cita.hora)} (${cita.motivo}). ${texto}`;
   window.open(`https://wa.me/${CONFIG.telClinica}?text=${encodeURIComponent(msg)}`, '_blank');
+  scCerrarPanelCancelacion();
+}
+function scCerrarPanelCancelacion(){
+  const ov = document.getElementById('scCancelOverlay');
+  if(ov) ov.style.display = 'none';
+  scCancelCitaActual = null;
+  scRenderCitas();
 }
 
 function scEsConfirmada(estado){
@@ -1791,7 +1862,7 @@ function scProximaCita(){
   if(!scCitasCache || !scCitasCache.length) return null;
   const hoyISO = scHoyISO();
   const futuras = scCitasCache
-    .filter(c => c.fechaISO >= hoyISO)
+    .filter(c => c.fechaISO >= hoyISO && !scEsCancelada(c.estado))
     .sort((a,b)=> (a.fechaISO+a.hora).localeCompare(b.fechaISO+b.hora));
   return futuras.length ? futuras[0] : null;
 }
@@ -1829,7 +1900,8 @@ async function scRenderCitas(){
   }
 
   const citas = scObtenerCitas();
-  if (resumenHome) resumenHome.textContent = citas.length ? `Tienes ${citas.length} cita${citas.length===1?'':'s'} próxima${citas.length===1?'':'s'}` : 'No tienes citas próximas';
+  const vigentes = citas.filter(c => c.fechaISO >= scHoyISO() && !scEsCancelada(c.estado));
+  if (resumenHome) resumenHome.textContent = vigentes.length ? `Tienes ${vigentes.length} cita${vigentes.length===1?'':'s'} próxima${vigentes.length===1?'':'s'}` : 'No tienes citas próximas';
 
   let cuerpo = '';
   if (!citas.length){
@@ -1849,9 +1921,13 @@ async function scRenderCitas(){
       if(yaPaso) claseTarjeta += ' cita-pasada';
       else if(esHoy) claseTarjeta += ' cita-hoy';
       else claseTarjeta += ' cita-futura';
+      if(scEsCancelada(c.estado)) claseTarjeta += ' cita-cancelada';
 
       let acciones = '';
-      if(yaPaso){
+      const cancelada = scEsCancelada(c.estado);
+      if(cancelada){
+        acciones = yaPaso ? '' : `<div class="cita-cancelada-nota">Esta cita fue cancelada.</div><button class="btn-reagendar" onclick="scIr('agendar')">📅 Elegir otra fecha</button>`;
+      } else if(yaPaso){
         // cita pasada: sin botones de confirmar/reagendar. Solo marcar asistencia
         const marcaAsist = c.asistio;
         if(marcaAsist === true){
@@ -1876,7 +1952,7 @@ async function scRenderCitas(){
       }
 
       const etiquetaHoy = esHoy ? `<span class="badge-hoy">HOY</span>` : '';
-      const estadoChip = yaPaso ? '' : `<span class="cita-estado ${esConf?'confirmada':'pendiente'}">${esConf ? '✓ Confirmada' : 'Por confirmar'}</span>`;
+      const estadoChip = cancelada ? '<span class="cita-estado cancelada">✗ Cancelada</span>' : yaPaso ? '' : `<span class="cita-estado ${esConf?'confirmada':'pendiente'}">${esConf ? '✓ Confirmada' : 'Por confirmar'}</span>`;
 
       return `
         <div class="${claseTarjeta}">
