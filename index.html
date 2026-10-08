@@ -129,6 +129,11 @@ img{max-width:100%; display:block}
 .cita-cancelada{opacity:.72}
 .cita-estado.cancelada{background:#fee2e2; color:#991b1b}
 .cita-cancelada-nota{font-size:.82rem; color:var(--gris); margin:6px 0}
+.ag-especial{background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.4); border-radius:14px; padding:14px; margin:6px 0 16px; text-align:center}
+.ag-especial .ae-tit{font-weight:700; font-size:.95rem; color:#fff}
+.ag-especial .ae-sub{font-size:.8rem; color:rgba(255,255,255,.85); margin:4px 0 10px; line-height:1.4}
+.ag-especial .ag-enviar{margin-top:0}
+.ag-motivo-fijo{background:rgba(255,255,255,.18); border-radius:12px; padding:12px; font-weight:700; color:#fff; text-align:center}
 .btn-push-probar{display:block; width:100%; background:#eff6ff; color:var(--azul-osc); border:1.5px solid #bfdbfe; border-radius:12px; padding:11px; font-weight:600; font-size:.85rem; margin:0 0 4px; cursor:pointer}
 .btn-push.activo{background:#ecfdf5; color:var(--ok); border:1.5px solid #a7e3ca; box-shadow:none}
 .btn-push:active{transform:scale(.99)}
@@ -1363,6 +1368,9 @@ let scAgHoraSel = '';
 let scAgMotivoSel = '';
 let scModoReagendar = null;        // si no es null, la pantalla de agendar está en modo "cambiar una cita"
 let scModoReagendarFresco = false;
+let scPuedeColocacion = false;      // el doctor desbloqueó la colocación de brackets para este paciente
+let scModoColocacion = false;       // la pantalla de agendar está en modo "colocación"
+let scModoColocacionFresco = false;
 let scAgCalMes = new Date().getMonth();   // mes que muestra el calendario
 let scAgCalAnio = new Date().getFullYear();
 
@@ -1381,9 +1389,14 @@ async function scRenderAgendar(){
   if(!scModoReagendarFresco) scModoReagendar = null;
   scModoReagendarFresco = false;
   const modo = scModoReagendar;
+  if(!scModoColocacionFresco) scModoColocacion = false;
+  scModoColocacionFresco = false;
   cont.innerHTML = `<div class="agendar-panel"><div class="panel-head">Cargando…</div></div>`;
   const horarios = await scCargarHorarios();
-  scAgFechaSel = ''; scAgHoraSel = ''; scAgMotivoSel = modo ? modo.motivo : '';
+  const colocacion = !modo && scModoColocacion && scPuedeColocacion;
+  scModoColocacion = colocacion;
+  const coloc = scColoc();
+  scAgFechaSel = ''; scAgHoraSel = ''; scAgMotivoSel = modo ? modo.motivo : (colocacion ? coloc.nombre : '');
   // calendario arranca en el mes actual
   scAgCalMes = new Date().getMonth();
   scAgCalAnio = new Date().getFullYear();
@@ -1394,16 +1407,21 @@ async function scRenderAgendar(){
 
   cont.innerHTML = `
     <div class="agendar-panel">
-      <div class="panel-head">${modo ? 'Cambiar tu cita' : 'Pide tu cita'}</div>
-      <div class="panel-sub">${modo ? scTextoCitaActual(modo) : (nombreClinica + ' · ' + nombreDoctor)}</div>
+      <div class="panel-head">${modo ? 'Cambiar tu cita' : (colocacion ? 'Colocación de tus brackets' : 'Pide tu cita')}</div>
+      <div class="panel-sub">${modo ? scTextoCitaActual(modo) : (colocacion ? ('Necesitamos ' + scColocTexto(coloc.min) + ' completa para tu colocación') : (nombreClinica + ' · ' + nombreDoctor))}</div>
 
+      ${(!modo && !colocacion && scPuedeColocacion && !scYaTieneColocacion()) ? `<div class="ag-especial"><div class="ae-tit">🦷 Ya puedes agendar tu colocación de brackets</div><div class="ae-sub">Necesita ${scColocTexto(coloc.min)} completa. Te mostramos solo los horarios donde cabe.</div><button class="ag-enviar" onclick="scIniciarColocacion()">Agendar mi colocación</button></div>` : ''}
       <div class="ag-label">📅 Elige el día</div>
       <div class="ag-cal" id="agCal"></div>
 
       <div class="ag-label">🕐 ¿A qué hora?</div>
       <div class="ag-chips" id="agChipsHora"><div class="ag-hint">Primero elige un día 👆</div></div>
 
-      ${modo ? `
+      ${colocacion ? `
+      <div class="ag-label">📝 Motivo de tu cita</div>
+      <div class="ag-motivo-fijo">🦷 ${coloc.nombre}</div>
+      <button class="ag-whats ag-suave" onclick="scModoColocacion=false; scRenderAgendar()">Mejor agendar otra cosa</button>
+      ` : modo ? `
       <div class="ag-label">⏳ ¿Necesitas un horario especial?</div>
       <button class="ag-whats" onclick="scReagendarPorWhatsApp('${modo.citaId}')">💬 Escribirle al Dr. Miguel por WhatsApp</button>
       ` : `
@@ -1411,7 +1429,7 @@ async function scRenderAgendar(){
       <div class="ag-chips" id="agChipsMotivo">${chipsMotivo}</div>
       `}
 
-      <button class="ag-enviar" id="agBtnEnviar" onclick="scEnviarSolicitud()">${modo ? 'Enviar solicitud de cambio' : 'Enviar solicitud'}</button>
+      <button class="ag-enviar" id="agBtnEnviar" onclick="scEnviarSolicitud()">${modo ? 'Enviar solicitud de cambio' : (colocacion ? 'Enviar solicitud de colocación' : 'Enviar solicitud')}</button>
       ${modo
         ? `<div class="ag-nota">Tu cita actual sigue apartada hasta que el Dr. Miguel acepte el cambio.${modo.pronto ? ' Tu cita es en menos de 24 horas: si es urgente, escríbele por WhatsApp.' : ''}</div>
            <button class="ag-whats ag-suave" onclick="scModoReagendar=null; scIr('citas')">Mejor no cambiarla</button>`
@@ -1447,7 +1465,7 @@ function scRenderCalendario(){
     // día sin disponibilidad publicada = bloqueado (no hay horas libres)
     let sinCupo = false;
     if(scDisponibilidad){
-      if(!scDisponibilidad[iso] || !scDisponibilidad[iso].length) sinCupo = true;
+      if(!scDisponibilidad[iso] || !scHorasConBloque(iso, scMinutosRequeridos()).length) sinCupo = true;
     }
     const deshab = esDomingo || esPasado || sinCupo;
     const sel = (iso === scAgFechaSel) ? ' sel' : '';
@@ -1471,14 +1489,8 @@ function scAgCambiarMes(dir){
 function scAgPickFecha(iso){
   scAgFechaSel = iso; scAgHoraSel = '';
   scRenderCalendario();
-  // horas libres reales si hay disponibilidad; si no, horario completo
-  let horasLibres;
-  if(scDisponibilidad && scDisponibilidad[iso]){
-    horasLibres = scDisponibilidad[iso];
-  } else {
-    const h = scHorariosClinica || scHorarioPorDefecto();
-    horasLibres = [...scHorasEntre(h.mInicio, h.mFin), ...scHorasEntre(h.vInicio, h.vFin)];
-  }
+  // horas libres reales (con el tiempo completo que necesita esta cita)
+  const horasLibres = scHorasConBloque(iso, scMinutosRequeridos());
   const manana = horasLibres.filter(x=>x < '14:00');
   const tarde = horasLibres.filter(x=>x >= '14:00');
   let html = '';
@@ -1490,7 +1502,7 @@ function scAgPickFecha(iso){
     html += `<div class="ag-turno">Tarde</div>`;
     html += tarde.map(hr=>`<button class="ag-chip ag-chip-hora" data-hora="${hr}" onclick="scAgPickHora('${hr}')">${scHoraAmPm(hr)}</button>`).join('');
   }
-  if(!html) html = `<div class="ag-hint">Sin horas libres ese día. Elige otro.</div>`;
+  if(!html) html = `<div class="ag-hint">${scModoColocacion ? 'Ese día no hay ' + scColocTexto(scColoc().min) + ' completa libre. Elige otro.' : 'Sin horas libres ese día. Elige otro.'}</div>`;
   document.getElementById('agChipsHora').innerHTML = html;
 }
 function scAgPickHora(hr){
@@ -1503,6 +1515,44 @@ function scAgPickMotivo(m){
 }
 
 // calcula horaFin = horaInicio + 30 min (el doctor la ajusta al aceptar)
+// ----- Colocación de brackets: bloqueada hasta que el doctor la desbloquea; necesita la hora completa libre -----
+function scColoc(){
+  const h = scHorariosClinica || {};
+  const min = [60, 90, 120].includes(Number(h.colocacionMin)) ? Number(h.colocacionMin) : 60;
+  return { nombre: String(h.colocacionNombre || '').trim() || 'Colocación de brackets', min: min };
+}
+function scColocTexto(min){ return min === 60 ? '1 hora' : (min === 90 ? '1 hora y media' : '2 horas'); }
+function scMinutosRequeridos(){ return scModoColocacion ? scColoc().min : 30; }
+function scSumarMinutos(hhmm, min){
+  let [h, m] = hhmm.split(':').map(Number);
+  m += min; h += Math.floor(m / 60); m = m % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+function scHorasLibresBase(iso){
+  if(scDisponibilidad && scDisponibilidad[iso]) return scDisponibilidad[iso];
+  const h = scHorariosClinica || scHorarioPorDefecto();
+  return [...scHorasEntre(h.mInicio, h.mFin), ...scHorasEntre(h.vInicio, h.vFin)];
+}
+// Horas de inicio que tienen "minutos" completos libres seguidos (cada hora libre dura 30 min)
+function scHorasConBloque(iso, minutos){
+  const libres = scHorasLibresBase(iso);
+  const n = Math.max(1, Math.round(minutos / 30));
+  const set = new Set(libres);
+  return libres.filter(h => { for(let k = 1; k < n; k++){ if(!set.has(scSumarMinutos(h, 30 * k))) return false; } return true; });
+}
+// ¿ya la tiene agendada o pedida? (para no ofrecerla dos veces)
+function scYaTieneColocacion(){
+  const nombre = scColoc().nombre.toLowerCase();
+  const hoy = scHoyISO();
+  const agendada = (scCitasCache || []).some(c => String(c.motivo || '').toLowerCase() === nombre && c.fechaISO >= hoy && !scEsCancelada(c.estado));
+  const pedida = JSON.parse(localStorage.getItem('sc_solicitudes_pend') || '[]').some(p => String(p.motivo || '').toLowerCase() === nombre);
+  return agendada || pedida;
+}
+function scIniciarColocacion(){
+  scModoColocacion = true; scModoColocacionFresco = true;
+  scRenderAgendar();
+}
+
 function scTextoCitaActual(modo){
   const f = scFechaLegible(modo.fechaOriginal);
   return `Cita actual: ${f.diaSemana} ${f.dia} de ${f.mes} · ${scHoraAmPm(modo.horaOriginal)}`;
@@ -1519,12 +1569,17 @@ async function scEnviarSolicitud(){
   const modo = scModoReagendar;
   const fecha = scAgFechaSel;
   const horaInicio = scAgHoraSel;
-  const motivo = modo ? modo.motivo : scAgMotivoSel;
+  const colocacion = !modo && scModoColocacion && scPuedeColocacion;
+  const coloc = colocacion ? scColoc() : null;
+  const motivo = modo ? modo.motivo : (colocacion ? coloc.nombre : scAgMotivoSel);
   if(!fecha){ alert(modo ? 'Elige el nuevo día para tu cita.' : 'Elige un día para tu cita.'); return; }
   if(!horaInicio){ alert(modo ? 'Elige la nueva hora para tu cita.' : 'Elige una hora para tu cita.'); return; }
   if(!motivo){ alert('Elige el motivo de tu cita.'); return; }
   if(modo && fecha === modo.fechaOriginal && horaInicio === modo.horaOriginal){
     alert('Elegiste el mismo día y hora de tu cita actual. Elige otro horario.'); return;
+  }
+  if(colocacion && !scHorasConBloque(fecha, coloc.min).includes(horaInicio)){
+    alert('Ese horario ya no tiene ' + scColocTexto(coloc.min) + ' completa libre. Elige otro.'); return;
   }
 
   const tel = localStorage.getItem('sc_citas_tel');
@@ -1552,7 +1607,7 @@ async function scEnviarSolicitud(){
       codigoPaciente: cod,
       fecha: fecha,
       horaInicio: horaInicio,
-      horaFin: scMasMediaHora(horaInicio),
+      horaFin: colocacion ? scSumarMinutos(horaInicio, coloc.min) : scMasMediaHora(horaInicio),
       motivo: motivo,
       estado: 'pendiente',
       fechaCreacion: Date.now()
@@ -1571,6 +1626,7 @@ async function scEnviarSolicitud(){
       : { fecha, hora:horaInicio, motivo, enviada:Date.now() });
     localStorage.setItem('sc_solicitudes_pend', JSON.stringify(pendientes));
     scModoReagendar = null;
+    scModoColocacion = false;
     // mostrar confirmación
     const f = scFechaLegible(fecha);
     document.getElementById('agendarContenido').innerHTML = `
@@ -1578,7 +1634,7 @@ async function scEnviarSolicitud(){
         <div style="font-size:3rem; margin-bottom:8px;">✅</div>
         <div class="panel-head">${modo ? '¡Solicitud de cambio enviada!' : '¡Solicitud enviada!'}</div>
         <div style="color:rgba(255,255,255,.9); font-size:.9rem; margin:12px 0; line-height:1.5;">
-          ${modo ? 'Pediste mover tu cita al' : 'Pediste tu cita para el'} <b>${f.diaSemana} ${f.dia} de ${f.mes}</b> a las <b>${scHoraAmPm(horaInicio)}</b>.<br><br>
+          ${modo ? 'Pediste mover tu cita al' : (colocacion ? 'Pediste la colocación de tus brackets para el' : 'Pediste tu cita para el')} <b>${f.diaSemana} ${f.dia} de ${f.mes}</b> a las <b>${scHoraAmPm(horaInicio)}</b>.<br><br>
           ${modo ? 'Tu cita actual sigue apartada mientras el Dr. Miguel revisa tu solicitud.' : 'El Dr. Miguel la revisará y la confirmará. Cuando la acepte, aparecerá en <b>"Mis citas"</b>. Te avisaremos.'}
         </div>
         <button class="btn-vincular" onclick="scIr('citas')">Ver Mis citas</button>
@@ -1626,6 +1682,7 @@ async function scVincularCitas(){
 }
 
 function scDesvincularCitas(){
+  scPuedeColocacion = false; scModoColocacion = false;
   if (!confirm('¿Quieres desvincular este dispositivo? Tendrás que volver a poner tu teléfono y código.')) return;
   localStorage.removeItem('sc_citas_tel');
   localStorage.removeItem('sc_citas_codigo');
@@ -1647,6 +1704,7 @@ async function scLeerCitasDeFirebase(tel, cod){
     scPlanCache = data.plan || [];
     scAvisosRechazo = data.avisosRechazo || [];
     scEstudiosCache = data.estudios || [];
+    scPuedeColocacion = data.puedeColocacion === true;
     scOrtoData = {
       activa: !!data.ortodoncia,
       porcentaje: data.ortoPorcentaje || 0,
@@ -2446,7 +2504,7 @@ async function scRefrescarApp(){
       await Promise.all(keys.map(k=>caches.delete(k)));
     }
     // limpiar cache de datos en memoria
-    scCitasCache = []; scPlanCache = []; scHorariosClinica = null;
+    scCitasCache = []; scPlanCache = []; scHorariosClinica = null; scPuedeColocacion = false;
     scOrtoData = { activa:false, porcentaje:0, faseTexto:'Fase 1: Alineación y nivelación' };
   }catch(e){ console.error('refresh error', e); }
   // recargar sin caché
