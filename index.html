@@ -1368,6 +1368,7 @@ let scAgHoraSel = '';
 let scAgMotivoSel = '';
 let scModoReagendar = null;        // si no es null, la pantalla de agendar está en modo "cambiar una cita"
 let scModoReagendarFresco = false;
+let scColocPend = '';                  // 'sup' | 'inf' según el módulo de ortodoncia
 let scPuedeColocacion = false;      // el doctor desbloqueó la colocación de brackets para este paciente
 let scModoColocacion = false;       // la pantalla de agendar está en modo "colocación"
 let scModoColocacionFresco = false;
@@ -1403,14 +1404,15 @@ async function scRenderAgendar(){
 
   const nombreClinica = horarios && horarios.clinica ? horarios.clinica : 'Dentilike';
   const nombreDoctor = horarios && horarios.doctor ? horarios.doctor : 'Dr. Miguel Alvarado';
-  const chipsMotivo = AGENDAR_MOTIVOS.map(m=>`<button class="ag-chip" data-motivo="${m}" onclick="scAgPickMotivo('${m.replace(/'/g,"\\'")}')">${m}</button>`).join('');
+  const chipColoc = (scPuedeColocacion && !scYaTieneColocacion()) ? `<button class="ag-chip" style="border-color:var(--accent); font-weight:bold;" onclick="scIniciarColocacion()">🦷 ${coloc.nombre}</button>` : '';
+  const chipsMotivo = chipColoc + AGENDAR_MOTIVOS.map(m=>`<button class="ag-chip" data-motivo="${m}" onclick="scAgPickMotivo('${m.replace(/'/g,"\\'")}')">${m}</button>`).join('');
 
   cont.innerHTML = `
     <div class="agendar-panel">
       <div class="panel-head">${modo ? 'Cambiar tu cita' : (colocacion ? 'Colocación de tus brackets' : 'Pide tu cita')}</div>
       <div class="panel-sub">${modo ? scTextoCitaActual(modo) : (colocacion ? ('Necesitamos ' + scColocTexto(coloc.min) + ' completa para tu colocación') : (nombreClinica + ' · ' + nombreDoctor))}</div>
 
-      ${(!modo && !colocacion && scPuedeColocacion && !scYaTieneColocacion()) ? `<div class="ag-especial"><div class="ae-tit">🦷 Ya puedes agendar tu colocación de brackets</div><div class="ae-sub">Necesita ${scColocTexto(coloc.min)} completa. Te mostramos solo los horarios donde cabe.</div><button class="ag-enviar" onclick="scIniciarColocacion()">Agendar mi colocación</button></div>` : ''}
+      ${(!modo && !colocacion && scPuedeColocacion && !scYaTieneColocacion()) ? `<div class="ag-especial"><div class="ae-tit">🦷 Ya puedes agendar la ${coloc.nombre.charAt(0).toLowerCase() + coloc.nombre.slice(1)}</div><div class="ae-sub">Necesita ${scColocTexto(coloc.min)} completa. Te mostramos solo los horarios donde cabe.</div><button class="ag-enviar" onclick="scIniciarColocacion()">Agendar mi colocación</button></div>` : ''}
       <div class="ag-label">📅 Elige el día</div>
       <div class="ag-cal" id="agCal"></div>
 
@@ -1519,7 +1521,8 @@ function scAgPickMotivo(m){
 function scColoc(){
   const h = scHorariosClinica || {};
   const min = [60, 90, 120].includes(Number(h.colocacionMin)) ? Number(h.colocacionMin) : 60;
-  return { nombre: String(h.colocacionNombre || '').trim() || 'Colocación de brackets', min: min };
+  const base = String(h.colocacionNombre || '').trim() || 'Colocación de brackets';
+  return { base: base, nombre: base, min: min };
 }
 function scColocTexto(min){ return min === 60 ? '1 hora' : (min === 90 ? '1 hora y media' : '2 horas'); }
 function scMinutosRequeridos(){ return scModoColocacion ? scColoc().min : 30; }
@@ -1542,10 +1545,10 @@ function scHorasConBloque(iso, minutos){
 }
 // ¿ya la tiene agendada o pedida? (para no ofrecerla dos veces)
 function scYaTieneColocacion(){
-  const nombre = scColoc().nombre.toLowerCase();
+  const nombre = scColoc().base.toLowerCase();
   const hoy = scHoyISO();
-  const agendada = (scCitasCache || []).some(c => String(c.motivo || '').toLowerCase() === nombre && c.fechaISO >= hoy && !scEsCancelada(c.estado));
-  const pedida = JSON.parse(localStorage.getItem('sc_solicitudes_pend') || '[]').some(p => String(p.motivo || '').toLowerCase() === nombre);
+  const agendada = (scCitasCache || []).some(c => String(c.motivo || '').toLowerCase().startsWith(nombre) && c.fechaISO >= hoy && !scEsCancelada(c.estado));
+  const pedida = JSON.parse(localStorage.getItem('sc_solicitudes_pend') || '[]').some(p => String(p.motivo || '').toLowerCase().startsWith(nombre));
   return agendada || pedida;
 }
 function scIniciarColocacion(){
@@ -1682,7 +1685,7 @@ async function scVincularCitas(){
 }
 
 function scDesvincularCitas(){
-  scPuedeColocacion = false; scModoColocacion = false;
+  scPuedeColocacion = false; scColocPend = ''; scModoColocacion = false;
   if (!confirm('¿Quieres desvincular este dispositivo? Tendrás que volver a poner tu teléfono y código.')) return;
   localStorage.removeItem('sc_citas_tel');
   localStorage.removeItem('sc_citas_codigo');
@@ -1705,6 +1708,7 @@ async function scLeerCitasDeFirebase(tel, cod){
     scAvisosRechazo = data.avisosRechazo || [];
     scEstudiosCache = data.estudios || [];
     scPuedeColocacion = data.puedeColocacion === true;
+    scColocPend = data.colocacionPend ? 'coloc' : '';
     scOrtoData = {
       activa: !!data.ortodoncia,
       porcentaje: data.ortoPorcentaje || 0,
@@ -2504,7 +2508,7 @@ async function scRefrescarApp(){
       await Promise.all(keys.map(k=>caches.delete(k)));
     }
     // limpiar cache de datos en memoria
-    scCitasCache = []; scPlanCache = []; scHorariosClinica = null; scPuedeColocacion = false;
+    scCitasCache = []; scPlanCache = []; scHorariosClinica = null; scPuedeColocacion = false; scColocPend = '';
     scOrtoData = { activa:false, porcentaje:0, faseTexto:'Fase 1: Alineación y nivelación' };
   }catch(e){ console.error('refresh error', e); }
   // recargar sin caché
