@@ -1,7 +1,7 @@
 // Service Worker ÚNICO de SmileLike: arranque instantáneo (caché) + notificaciones push (FCM).
 // ⚠️ La app debe registrar SOLO este archivo. Dos service workers en el mismo alcance
 //    se reemplazan entre sí y las notificaciones dejan de mostrarse.
-const CACHE_NAME = "smilelike-v28";
+const CACHE_NAME = "smilelike-v31";
 const ASSETS = ["./", "./index.html", "./manifest.json"];
 
 /* ---------- Notificaciones push (Firebase Cloud Messaging) ---------- */
