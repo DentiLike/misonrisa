@@ -1,8 +1,8 @@
 // Service Worker ÚNICO de SmileLike: arranque instantáneo (caché) + notificaciones push (FCM).
 // ⚠️ La app debe registrar SOLO este archivo. Dos service workers en el mismo alcance
 //    se reemplazan entre sí y las notificaciones dejan de mostrarse.
-const CACHE_NAME = "smilelike-v32";
-const ASSETS = ["./", "./index.html", "./manifest.json"];
+const CACHE_NAME = "smilelike-v33";
+const ASSETS = ["./", "./index.html", "./manifest.json", "./badge.png"];
 
 /* ---------- Notificaciones push (Firebase Cloud Messaging) ---------- */
 try {
@@ -23,7 +23,7 @@ try {
     if (payload.notification) return;
     const d = payload.data || {};
     return self.registration.showNotification(d.title || "SmileLike", {
-      body: d.body || "", icon: "favicon.png", badge: "favicon.png", data: d
+      body: d.body || "", icon: "favicon.png", badge: "badge.png", data: d
     });
   });
 } catch (e) { /* sin red al instalar: la app sigue; el push se activa en la siguiente versión */ }

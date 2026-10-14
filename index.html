@@ -878,7 +878,7 @@ async function scProbarNotificacion(){
   if(Notification.permission !== 'granted'){ alert('Primero activa los recordatorios.'); return; }
   try{
     const reg = await navigator.serviceWorker.getRegistration();
-    if(reg){ await reg.showNotification('🦷 Prueba Mi Sonrisa', { body:'¡Tus notificaciones funcionan! Aquí verás tus recordatorios de citas. ✓', icon:'favicon.png' }); }
+    if(reg){ await reg.showNotification('🦷 Prueba Mi Sonrisa', { body:'¡Tus notificaciones funcionan! Aquí verás tus recordatorios de citas. ✓', icon:'favicon.png', badge:'badge.png' }); }
     else { new Notification('🦷 Prueba Mi Sonrisa', { body:'¡Tus notificaciones funcionan! ✓', icon:'favicon.png' }); }
   }catch(e){ console.error('probar', e); alert('No se pudo mostrar la prueba. Revisa los permisos en tu celular.'); }
 }
