@@ -1542,8 +1542,8 @@ function scColoc(){
   const base = String(h.colocacionNombre || '').trim() || 'Colocación de brackets';
   return { base: base, nombre: base, min: min };
 }
-function scColocTexto(min){ return min === 60 ? '1 hora' : (min === 90 ? '1 hora y media' : '2 horas'); }
-function scMinutosRequeridos(){ return scModoColocacion ? scColoc().min : 30; }
+function scColocTexto(min){ return min === 60 ? '1 hora' : (min === 90 ? '1 hora y media' : (min === 120 ? '2 horas' : min + ' min')); }
+function scMinutosRequeridos(){ if(scModoReagendar && scModoReagendar.dur) return scModoReagendar.dur; return scModoColocacion ? scColoc().min : 30; }
 function scSumarMinutos(hhmm, min){
   let [h, m] = hhmm.split(':').map(Number);
   m += min; h += Math.floor(m / 60); m = m % 60;
@@ -1602,6 +1602,10 @@ async function scEnviarSolicitud(){
   if(colocacion && !scHorasConBloque(fecha, coloc.min).includes(horaInicio)){
     alert('Ese horario ya no tiene ' + scColocTexto(coloc.min) + ' completa libre. Elige otro.'); return;
   }
+  const durReag = modo ? (modo.dur || 30) : 30;
+  if(modo && durReag > 30 && !scHorasConBloque(fecha, durReag).includes(horaInicio)){
+    alert('Ese horario ya no tiene ' + scColocTexto(durReag) + ' completa libre. Elige otro.'); return;
+  }
 
   const tel = localStorage.getItem('sc_citas_tel');
   const cod = localStorage.getItem('sc_citas_codigo');
@@ -1628,7 +1632,7 @@ async function scEnviarSolicitud(){
       codigoPaciente: cod,
       fecha: fecha,
       horaInicio: horaInicio,
-      horaFin: colocacion ? scSumarMinutos(horaInicio, coloc.min) : scMasMediaHora(horaInicio),
+      horaFin: colocacion ? scSumarMinutos(horaInicio, coloc.min) : (modo && durReag > 30 ? scSumarMinutos(horaInicio, durReag) : scMasMediaHora(horaInicio)),
       motivo: motivo,
       estado: 'pendiente',
       fechaCreacion: Date.now()
@@ -1844,7 +1848,16 @@ async function scReagendarCita(id){
     return;
   }
   const faltan = new Date(`${cita.fechaISO}T${cita.hora}:00`).getTime() - Date.now();
-  scModoReagendar = { citaId: String(cita.id), fechaOriginal: cita.fechaISO, horaOriginal: cita.hora, motivo: cita.motivo || 'Ajuste', pronto: faltan < 24*3600*1000 };
+  let durCita = 30;
+  try{
+    if(cita.horaFin && /^\d{1,2}:\d{2}$/.test(cita.horaFin)){
+      const a = cita.hora.split(':'), b = cita.horaFin.split(':');
+      durCita = (+b[0]*60 + +b[1]) - (+a[0]*60 + +a[1]);
+    }
+    if(!(durCita >= 30) && /coloc/i.test(cita.motivo||'')) durCita = scColoc().min;
+  }catch(e){}
+  if(!(durCita >= 30)) durCita = 30;
+  scModoReagendar = { citaId: String(cita.id), fechaOriginal: cita.fechaISO, horaOriginal: cita.hora, motivo: cita.motivo || 'Ajuste', dur: durCita, pronto: faltan < 24*3600*1000 };
   scModoReagendarFresco = true;
   scIr('agendar');
 }
@@ -2564,6 +2577,20 @@ async function scRefrescarApp(){
 }
 
 /* ---------- Init ---------- */
+// Marca de "último uso": le avisa al consultorio que el paciente abrió la app (máx. 1 vez cada 6 h por dispositivo)
+async function scRegistrarUso(){
+  try{
+    const tel = localStorage.getItem('sc_citas_tel'), cod = localStorage.getItem('sc_citas_codigo');
+    if(!scFbOK || !tel || !cod) return;
+    const ult = +localStorage.getItem('sc_uso_ts') || 0;
+    if(Date.now() - ult < 6*3600*1000) return;
+    if(!scAuthListo) await scIniciarAuth();
+    const llave = await scHashLlave(tel, cod);
+    await scDB.collection('citas_pacientes').doc(llave).update({ ultimoUso: Date.now() });
+    localStorage.setItem('sc_uso_ts', String(Date.now()));
+  }catch(e){ /* sin conexión o permisos: no pasa nada */ }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   scAplicarFestividad(); // avatar y saludo festivo si aplica
   scActualizarAvisoProximaCita(); // saludo (con festividad si hay)
@@ -2589,8 +2616,9 @@ window.addEventListener('DOMContentLoaded', () => {
   if ('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
     setTimeout(() => scRenovarToken(false), 3500);                       // al abrir la app
+    setTimeout(scRegistrarUso, 5000);
     document.addEventListener('visibilitychange', () => {                 // al volver a ella
-      if(document.visibilityState === 'visible') scRenovarToken(false);
+      if(document.visibilityState === 'visible'){ scRenovarToken(false); setTimeout(scRegistrarUso, 2500); }
     });
   }
 });
