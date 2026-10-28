@@ -489,6 +489,39 @@ img{max-width:100%; display:block}
 .foot-contacto .linea{font-size:.8rem; color:var(--gris); margin-bottom:6px; line-height:1.5}
 .foot-contacto a{color:var(--azul); font-weight:600; text-decoration:none}
 .foot-contacto .legal{font-size:.68rem; color:var(--gris-cl); margin-top:12px; line-height:1.5}
+
+/* ===== Temporadas (mismas fechas que Smile Plan y la página de citas) ===== */
+body.fest-halloween{--cta1:#ff8a3d; --cta2:#ea580c; --cta-borde:#b8460b; --cta-glow:rgba(234,88,12,.35); --fs-bg:#2b1a3d; --fs-tx:#ffb347}
+body.fest-muertos{--cta1:#f6a623; --cta2:#d97706; --cta-borde:#a85a04; --cta-glow:rgba(217,119,6,.35); --fs-bg:#fff1d6; --fs-tx:#9d174d}
+body.fest-patrias{--cta1:#119a57; --cta2:#006847; --cta-borde:#004d35; --cta-glow:rgba(0,104,71,.35); --fs-bg:#e8f5ee; --fs-tx:#006847}
+body.fest-navidad{--cta1:#d63a3f; --cta2:#a8161c; --cta-borde:#7f1016; --cta-glow:rgba(168,22,28,.32); --fs-bg:#fdecec; --fs-tx:#a8161c}
+body.fest-anonuevo{--cta1:#d9a821; --cta2:#a87a06; --cta-borde:#7a5800; --cta-glow:rgba(168,122,6,.35); --fs-bg:#1d2b44; --fs-tx:#f3cf63}
+body.fest-valentin{--cta1:#f2557a; --cta2:#d23661; --cta-borde:#a3234a; --cta-glow:rgba(210,54,97,.32); --fs-bg:#ffe4ec; --fs-tx:#c2185b}
+body[class*="fest-"] .btn-agendar-citas, body[class*="fest-"] .ag-enviar{background:linear-gradient(135deg,var(--cta1),var(--cta2)); color:#fff; box-shadow:0 4px 0 var(--cta-borde), 0 8px 18px var(--cta-glow)}
+body[class*="fest-"] .menu-card.destacada{border-left-color:var(--cta2) !important}
+.fest-saludo{display:table; margin:0 auto 8px; padding:6px 16px; border-radius:22px; font-family:'Fredoka',sans-serif; font-weight:700; font-size:1.15rem; background:var(--fs-bg,#e6f6f5); color:var(--fs-tx,var(--teal-osc)); box-shadow:0 3px 10px rgba(0,0,0,.12)}
+.fest-deco{position:fixed; inset:0; pointer-events:none; z-index:60; overflow:hidden}
+.fest-deco .vuela{position:absolute; left:-60px; font-size:22px; opacity:.68; animation:festVuela linear infinite}
+@keyframes festVuela{0%{transform:translate(0,0) rotate(-6deg)}25%{transform:translate(28vw,-24px) rotate(6deg)}50%{transform:translate(56vw,10px) rotate(-6deg)}75%{transform:translate(84vw,-18px) rotate(6deg)}100%{transform:translate(115vw,0) rotate(-6deg)}}
+.fest-deco .cae{position:absolute; top:-40px; font-size:18px; opacity:.7; animation:festCae linear infinite}
+.fest-deco .conf{position:absolute; top:-20px; width:9px; height:13px; border-radius:2px; opacity:.85; animation:festCae linear infinite}
+@keyframes festCae{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(24px,52vh) rotate(180deg)}100%{transform:translate(-10px,108vh) rotate(360deg)}}
+.fest-deco .sube{position:absolute; bottom:-40px; font-size:18px; opacity:.68; animation:festSube linear infinite}
+@keyframes festSube{0%{transform:translate(0,0) scale(.9)}50%{transform:translate(-18px,-55vh) scale(1.05)}100%{transform:translate(12px,-112vh) scale(.9)}}
+@media(prefers-reduced-motion:reduce){.fest-deco{display:none}}
+
+/* Adornos de temporada en el globo de Mikes Molares (con ::before/::after para que no se borren al cambiar el texto) */
+body[class*="fest-"] .bocadillo{overflow:hidden}
+body.fest-halloween .bocadillo::after{content:''; position:absolute; top:0; right:0; width:74px; height:74px; opacity:.5; pointer-events:none; background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%20fill%3D%22none%22%20stroke%3D%22%235b4a6b%22%20stroke-width%3D%221.2%22%3E%3Cpath%20d%3D%22M100%200L40%2060M100%200L20%2030M100%200L70%2095M100%200L0%205M100%200L98%20100%22/%3E%3Cpath%20d%3D%22M85%203Q86%2014%2097%2015M70%206Q72%2028%2095%2030M55%209Q58%2042%2093%2045M40%2012Q44%2056%2090%2060%22/%3E%3Ccircle%20cx%3D%2262%22%20cy%3D%2238%22%20r%3D%223%22%20fill%3D%22%235b4a6b%22/%3E%3Cpath%20d%3D%22M62%2038V20%22%20stroke-width%3D%22.8%22/%3E%3C/svg%3E") no-repeat center/contain}
+body.fest-muertos .bocadillo, body.fest-patrias .bocadillo, body.fest-navidad .bocadillo{padding-top:20px}
+body.fest-anonuevo .bocadillo, body.fest-valentin .bocadillo{padding-top:18px}
+body.fest-muertos .bocadillo::before, body.fest-patrias .bocadillo::before, body.fest-navidad .bocadillo::before, body.fest-anonuevo .bocadillo::before, body.fest-valentin .bocadillo::before{content:''; position:absolute; top:0; left:0; right:0; height:11px; opacity:.6; pointer-events:none}
+body.fest-muertos .bocadillo::before{background:repeating-linear-gradient(90deg,#e11d74 0 18px,#f59e0b 18px 36px,#7c3aed 36px 54px,#10b981 54px 72px,#f97316 72px 90px); clip-path:polygon(0 0,100% 0,100% 55%,96% 100%,92% 55%,88% 100%,84% 55%,80% 100%,76% 55%,72% 100%,68% 55%,64% 100%,60% 55%,56% 100%,52% 55%,48% 100%,44% 55%,40% 100%,36% 55%,32% 100%,28% 55%,24% 100%,20% 55%,16% 100%,12% 55%,8% 100%,4% 55%,0 100%)}
+body.fest-patrias .bocadillo::before{background:repeating-linear-gradient(90deg,#006847 0 16px,#fff 16px 32px,#ce1126 32px 48px); clip-path:polygon(0 0,100% 0,100% 55%,96% 100%,92% 55%,88% 100%,84% 55%,80% 100%,76% 55%,72% 100%,68% 55%,64% 100%,60% 55%,56% 100%,52% 55%,48% 100%,44% 55%,40% 100%,36% 55%,32% 100%,28% 55%,24% 100%,20% 55%,16% 100%,12% 55%,8% 100%,4% 55%,0 100%); box-shadow:inset 0 -1px 0 rgba(0,0,0,.05)}
+body.fest-navidad .bocadillo::before{height:13px; background:radial-gradient(circle 3px at 12px 8px,#ef4444 95%,#0000) 0 0/60px 13px, radial-gradient(circle 3px at 27px 8px,#facc15 95%,#0000) 0 0/60px 13px, radial-gradient(circle 3px at 42px 8px,#22c55e 95%,#0000) 0 0/60px 13px, radial-gradient(circle 3px at 57px 8px,#3b82f6 95%,#0000) 0 0/60px 13px, linear-gradient(#2f5d3a,#2f5d3a) 0 3px/100% 1px no-repeat; animation:festLucesSl 1.6s steps(2) infinite}
+@keyframes festLucesSl{50%{filter:brightness(1.35) saturate(1.3)}}
+body.fest-anonuevo .bocadillo::before{height:5px; background:linear-gradient(90deg,#b8860b,#f3cf63,#b8860b,#f3cf63,#b8860b)}
+body.fest-valentin .bocadillo::before{height:5px; background:linear-gradient(90deg,#f2557a,#ffb3c6,#f2557a,#ffb3c6,#f2557a)}
 </style>
 </head>
 <body>
@@ -952,17 +985,17 @@ function scWhatsAppClinica(){
    Si 'imagen' no existe en el repo, se usa el avatar normal (no rompe).
    ============================================================ */
 const FESTIVIDADES = [
-  { id:'patrias',   imagen:'avatar-patrias.png',   saludo:'¡Felices Fiestas Patrias! 🇲🇽',   desde:{m:9,  d:10}, hasta:{m:9,  d:17} },
-  { id:'halloween', imagen:'avatar-halloween.png', saludo:'¡Feliz Halloween! 🎃',            desde:{m:10, d:26}, hasta:{m:10, d:31} },
-  { id:'muertos',   imagen:'avatar-muertos.png',   saludo:'¡Feliz Día de Muertos! 💀🌼',      desde:{m:10, d:30}, hasta:{m:11, d:2}  },
-  { id:'navidad',   imagen:'avatar-navidad.png',   saludo:'¡Feliz Navidad! 🎄',              desde:{m:12, d:18}, hasta:{m:12, d:25} },
-  { id:'anonuevo',  imagen:'avatar-anonuevo.png',  saludo:'¡Feliz Año Nuevo! 🎉',            desde:{m:12, d:29}, hasta:{m:1,  d:2}  },
-  { id:'reyes',     imagen:'avatar-reyes.png',     saludo:'¡Feliz Día de Reyes! 👑',         desde:{m:1,  d:3},  hasta:{m:1,  d:6}  },
-  { id:'valentin',  imagen:'avatar-valentin.png',  saludo:'¡Feliz San Valentín! 💘',         desde:{m:2,  d:10}, hasta:{m:2,  d:14} }
+  { id:'patrias',   imagen:'avatar-patrias.png',   saludo:'¡Felices Fiestas Patrias! 🇲🇽',   desde:{m:9,  d:5},  hasta:{m:9,  d:17} },
+  { id:'halloween', imagen:'avatar-halloween.png', saludo:'¡Auuuuuu! 🐺 Feliz Halloween',    desde:{m:10, d:12}, hasta:{m:11, d:3}  },
+  { id:'muertos',   imagen:'avatar-muertos.png',   saludo:'¡Feliz Día de Muertos! 🌼',       desde:{m:10, d:12}, hasta:{m:11, d:3}  },
+  { id:'navidad',   imagen:'avatar-navidad.png',   saludo:'¡Feliz Navidad! 🎄',              desde:{m:12, d:1},  hasta:{m:12, d:26} },
+  { id:'anonuevo',  imagen:'avatar-anonuevo.png',  saludo:'¡Feliz Año Nuevo! 🎉',            desde:{m:12, d:27}, hasta:{m:1,  d:6}  },
+  { id:'valentin',  imagen:'avatar-valentin.png',  saludo:'¡Feliz San Valentín! 💘',         desde:{m:2,  d:7},  hasta:{m:2,  d:15} }
 ];
 
 // Devuelve las festividades activas hoy (puede haber 2 traslapadas: Halloween/Muertos)
 function scFestividadesHoy(){
+  try{ const q = new URLSearchParams(location.search).get('fest'); if(q){ const f = FESTIVIDADES.find(x => x.id === q); if(f) return [f]; } }catch(e){}   // vista previa: ?fest=halloween
   const hoy = new Date();
   const m = hoy.getMonth()+1, d = hoy.getDate();
   const enRango = (f)=>{
@@ -994,6 +1027,24 @@ function scAplicarFestividad(){
     img.onerror = function(){ this.onerror=null; this.src='avatar-dr.png'; };
     img.src = elegida.imagen;
   }
+  scDecorarTemporada(elegida.id);
+}
+// Colores de temporada y lluvia de iconitos (no tapan nada ni se pueden tocar)
+function scDecorarTemporada(n){
+  document.body.classList.add('fest-' + n);
+  const P = { halloween:{v:['🦇','🦇','🦇'],c:['🎃','🍬']}, muertos:{c:['🌼','🌼','🌼','🏵️']},
+    patrias:{k:['#006847','#ffffff','#ce1126','#006847','#ce1126','#ffffff','#006847','#ce1126']},
+    navidad:{c:['❄️','❄️','❄️','❄️','❄️']}, anonuevo:{c:['✨','✨'],k:['#d9a821','#f3cf63','#b8860b','#c0c0c0','#f3cf63','#d9a821']},
+    valentin:{u:['💗','💕','❤️','💗']} }[n];
+  if(!P || document.querySelector('.fest-deco')) return;
+  ['v','c','k','u'].forEach(k => { if(P[k]) P[k] = P[k].concat(P[k]); });
+  const d = document.createElement('div'); d.className = 'fest-deco'; d.setAttribute('aria-hidden', 'true');
+  const el = (c, t) => { const x = document.createElement('span'); x.className = c; if(t) x.textContent = t; d.appendChild(x); return x; };
+  (P.v || []).forEach((e, i) => { const x = el('vuela', e); x.style.top = ((6 + i * 15) % 90) + 'vh'; x.style.animationDuration = (14 + (i % 3) * 5) + 's'; x.style.animationDelay = (i * 2.6) + 's'; x.style.fontSize = (20 + (i % 3) * 5) + 'px'; });
+  (P.c || []).forEach((e, i) => { const x = el('cae', e); x.style.left = ((7 + i * 17) % 94) + 'vw'; x.style.animationDuration = (12 + (i % 4) * 3) + 's'; x.style.animationDelay = (i * 1.9) + 's'; x.style.fontSize = (18 + (i % 3) * 4) + 'px'; });
+  (P.k || []).forEach((c, i) => { const x = el('conf'); x.style.background = c; x.style.left = ((3 + i * 11) % 96) + 'vw'; x.style.animationDuration = (9 + (i % 4) * 3) + 's'; x.style.animationDelay = (i * 0.9) + 's'; if(c === '#ffffff') x.style.boxShadow = '0 0 0 1px #d6dde5'; });
+  (P.u || []).forEach((e, i) => { const x = el('sube', e); x.style.left = ((8 + i * 17) % 92) + 'vw'; x.style.animationDuration = (13 + (i % 4) * 3) + 's'; x.style.animationDelay = (i * 2) + 's'; x.style.fontSize = (18 + (i % 3) * 4) + 'px'; });
+  document.body.appendChild(d);
 }
 
 /* ---------- Instalación como app (PWA) ---------- */
@@ -2421,7 +2472,7 @@ function scRenderPlanTratamiento(){
 function scActualizarAvisoProximaCita(){
   const boc = document.getElementById('bocadillo');
   if(!boc) return;
-  const saludoFestivo = scFestivoActual ? `<div style="font-size:.95rem; font-weight:700; color:var(--teal-osc); margin-bottom:6px;">${scFestivoActual.saludo}</div>` : '';
+  const saludoFestivo = scFestivoActual ? `<div class="fest-saludo">${scFestivoActual.saludo}</div>` : '';
   const prox = scProximaCita();
   if(prox){
     const f = scFechaLegible(prox.fechaISO);
